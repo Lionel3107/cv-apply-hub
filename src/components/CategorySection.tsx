@@ -13,7 +13,7 @@ interface CategoryProps {
 const Category = ({ title, count, icon, color }: CategoryProps) => {
   return (
     <Link to={`/category/${title.toLowerCase()}`}>
-      <Card className="job-card hover:border-brand-blue cursor-pointer">
+      <Card className="job-card hover:border-brand-blue cursor-pointer transition-all duration-200 hover:shadow-md">
         <CardContent className="p-6 flex items-center">
           <div 
             className={`w-12 h-12 rounded-md flex items-center justify-center mr-4 ${color}`}

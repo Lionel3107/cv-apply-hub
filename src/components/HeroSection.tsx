@@ -3,14 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Searching for:", searchTerm);
-    // In a real app, we would trigger a search with this term
+    if (searchTerm.trim()) {
+      navigate(`/jobs?search=${encodeURIComponent(searchTerm)}`);
+    }
   };
 
   return (
@@ -45,10 +48,10 @@ const HeroSection = () => {
         
         <div className="mt-8 text-white/80 flex flex-wrap justify-center gap-x-6 gap-y-2 animate-slide-up" style={{ animationDelay: "0.2s" }}>
           <span>Popular: </span>
-          <a href="#" className="hover:text-white hover:underline">Software Engineer</a>
-          <a href="#" className="hover:text-white hover:underline">Product Manager</a>
-          <a href="#" className="hover:text-white hover:underline">UX Designer</a>
-          <a href="#" className="hover:text-white hover:underline">Marketing</a>
+          <a href="/jobs?search=Software%20Engineer" className="hover:text-white hover:underline">Software Engineer</a>
+          <a href="/jobs?search=Product%20Manager" className="hover:text-white hover:underline">Product Manager</a>
+          <a href="/jobs?search=UX%20Designer" className="hover:text-white hover:underline">UX Designer</a>
+          <a href="/jobs?search=Marketing" className="hover:text-white hover:underline">Marketing</a>
         </div>
       </div>
     </div>
