@@ -1,0 +1,344 @@
+
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Briefcase, MapPin, Building, Tag, DollarSign, Calendar } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { mockJobs } from "@/data/mockJobs";
+
+// Creating a schema for job posting validation
+const formSchema = z.object({
+  title: z.string().min(2, {
+    message: "Job title must be at least 2 characters.",
+  }),
+  company: z.string().min(2, {
+    message: "Company name must be at least 2 characters.",
+  }),
+  location: z.string().min(2, {
+    message: "Location must be at least 2 characters.",
+  }),
+  type: z.string().min(2, {
+    message: "Job type must be at least 2 characters.",
+  }),
+  category: z.string().min(2, {
+    message: "Category must be at least 2 characters.",
+  }),
+  description: z.string().min(30, {
+    message: "Description must be at least 30 characters.",
+  }),
+  requirements: z.string().min(20, {
+    message: "Requirements must be at least 20 characters.",
+  }),
+  benefits: z.string().min(20, {
+    message: "Benefits must be at least 20 characters.",
+  }),
+  salary: z.string().optional(),
+  isRemote: z.boolean().default(false),
+  featured: z.boolean().default(false),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface PostJobFormProps {
+  onJobPosted: () => void;
+}
+
+export function PostJobForm({ onJobPosted }: PostJobFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize the form with default values
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      company: "",
+      location: "",
+      type: "Full-time",
+      category: "Technology",
+      description: "",
+      requirements: "",
+      benefits: "",
+      salary: "",
+      isRemote: false,
+      featured: false,
+    },
+  });
+
+  const onSubmit = (values: FormValues) => {
+    setIsSubmitting(true);
+    
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // In a real app, this would be an API call to save the job
+      const newJob = {
+        id: (mockJobs.length + 1).toString(),
+        title: values.title,
+        company: values.company,
+        location: values.location,
+        type: values.type,
+        category: values.category,
+        tags: [values.type, values.category],
+        description: values.description,
+        requirements: values.requirements.split('\n').filter(item => item.trim() !== ''),
+        benefits: values.benefits.split('\n').filter(item => item.trim() !== ''),
+        salary: values.salary || "Competitive",
+        postedDate: new Date().toISOString(),
+        featured: values.featured,
+        isRemote: values.isRemote,
+      };
+      
+      // In a real app, we would add this to the database
+      // For now, we'll just add it to the mockJobs array (without persisting)
+      console.log("New job posted:", newJob);
+      
+      setIsSubmitting(false);
+      onJobPosted();
+    }, 1500);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 bg-white p-6 rounded-lg shadow-md">
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Title</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. Software Engineer" className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. Acme Inc." className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. New York, NY" className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="salary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Salary Range (Optional)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. $80,000 - $100,000" className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Type</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. Full-time, Part-time" className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Category</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <Input placeholder="e.g. Technology, Marketing" className="pl-10" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-4">
+            <FormField
+              control={form.control}
+              name="isRemote"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Remote Position</FormLabel>
+                    <FormDescription>
+                      Check if this job can be done remotely
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="featured"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Featured Job</FormLabel>
+                    <FormDescription>
+                      Check to highlight this job in search results
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold border-b pb-2">Job Details</h2>
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe the responsibilities and details of the job"
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Include key responsibilities, technologies used, team structure, etc.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="requirements"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Requirements</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="List the requirements for this job (one per line)"
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Include skills, experience, education, certifications needed (one per line)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="benefits"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Benefits</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="List the benefits offered (one per line)"
+                    className="min-h-[120px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Include perks, health insurance, PTO, work environment benefits (one per line)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <Button 
+          type="submit" 
+          className="w-full bg-brand-blue hover:bg-brand-darkBlue"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Posting Job..." : "Post Job"}
+        </Button>
+      </form>
+    </Form>
+  );
+}

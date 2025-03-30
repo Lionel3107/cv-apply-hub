@@ -55,9 +55,11 @@ const Header = () => {
             >
               About
             </Link>
-            <Button className="bg-brand-blue hover:bg-brand-darkBlue">
-              Post a Job
-            </Button>
+            <Link to="/post-job">
+              <Button className="bg-brand-blue hover:bg-brand-darkBlue">
+                Post a Job
+              </Button>
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -106,12 +108,13 @@ const Header = () => {
             >
               About
             </Link>
-            <Button 
-              className="bg-brand-blue hover:bg-brand-darkBlue mx-4"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Post a Job
-            </Button>
+            <Link to="/post-job" onClick={() => setIsMenuOpen(false)}>
+              <Button 
+                className="bg-brand-blue hover:bg-brand-darkBlue mx-4 w-[calc(100%-2rem)]"
+              >
+                Post a Job
+              </Button>
+            </Link>
           </nav>
         )}
       </div>
