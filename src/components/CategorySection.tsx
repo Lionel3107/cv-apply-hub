@@ -2,6 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Code, Briefcase, PenTool, BarChart, Server, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { mockJobs } from "@/data/mockJobs";
 
 interface CategoryProps {
   title: string;
@@ -31,40 +32,47 @@ const Category = ({ title, count, icon, color }: CategoryProps) => {
 };
 
 const CategorySection = () => {
+  // Calculate the actual number of jobs in each category
+  const getCategoryCount = (categoryName: string) => {
+    return mockJobs.filter(job => 
+      job.category.toLowerCase() === categoryName.toLowerCase()
+    ).length;
+  };
+
   const categories = [
     { 
       title: "Technology", 
-      count: 120, 
+      count: getCategoryCount("Technology"), 
       icon: <Code size={24} className="text-white" />, 
       color: "bg-blue-500" 
     },
     { 
       title: "Business", 
-      count: 75, 
+      count: getCategoryCount("Business"), 
       icon: <Briefcase size={24} className="text-white" />, 
       color: "bg-purple-500" 
     },
     { 
       title: "Design", 
-      count: 53, 
+      count: getCategoryCount("Design"), 
       icon: <PenTool size={24} className="text-white" />, 
       color: "bg-pink-500" 
     },
     { 
       title: "Marketing", 
-      count: 92, 
+      count: getCategoryCount("Marketing"), 
       icon: <BarChart size={24} className="text-white" />, 
       color: "bg-green-500" 
     },
     { 
       title: "Engineering", 
-      count: 110, 
+      count: getCategoryCount("Engineering"), 
       icon: <Server size={24} className="text-white" />, 
       color: "bg-orange-500" 
     },
     { 
       title: "Sales", 
-      count: 65, 
+      count: getCategoryCount("Sales"), 
       icon: <ShoppingBag size={24} className="text-white" />, 
       color: "bg-red-500" 
     },
