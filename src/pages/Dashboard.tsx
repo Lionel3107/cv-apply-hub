@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyDashboardJobs } from "@/components/CompanyDashboardJobs";
 import { CompanyDashboardInsights } from "@/components/CompanyDashboardInsights";
 import { CompanyDashboardApplicants } from "@/components/CompanyDashboardApplicants";
+import { CompanyDashboardTasks } from "@/components/CompanyDashboardTasks";
+import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("jobs");
@@ -18,7 +20,7 @@ const Dashboard = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Company Dashboard</h1>
             <p className="text-gray-600">
-              Manage your job listings and track applicant insights
+              Manage your job listings, applicants, tasks, and schedule
             </p>
           </div>
 
@@ -26,6 +28,8 @@ const Dashboard = () => {
             <TabsList className="mb-8">
               <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
               <TabsTrigger value="applicants">Applicants</TabsTrigger>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
+              <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="insights">Insights</TabsTrigger>
             </TabsList>
             <TabsContent value="jobs">
@@ -33,6 +37,12 @@ const Dashboard = () => {
             </TabsContent>
             <TabsContent value="applicants">
               <CompanyDashboardApplicants />
+            </TabsContent>
+            <TabsContent value="tasks">
+              <CompanyDashboardTasks />
+            </TabsContent>
+            <TabsContent value="schedule">
+              <CompanyDashboardSchedule />
             </TabsContent>
             <TabsContent value="insights">
               <CompanyDashboardInsights />
