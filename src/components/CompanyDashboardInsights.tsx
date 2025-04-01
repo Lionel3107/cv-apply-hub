@@ -15,14 +15,6 @@ export const CompanyDashboardInsights = () => {
     { name: 'Jun', applications: 40 },
   ];
 
-  const jobViewsData = [
-    { name: 'Senior Frontend Developer', views: 452 },
-    { name: 'UX Designer', views: 378 },
-    { name: 'Product Manager', views: 289 },
-    { name: 'Backend Developer', views: 403 },
-    { name: 'Marketing Specialist', views: 315 },
-  ];
-
   const sourceData = [
     { name: 'Direct', value: 40 },
     { name: 'Referral', value: 25 },
@@ -140,44 +132,6 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
       </div>
-
-      <Card className="animate-fade-in">
-        <CardHeader>
-          <CardTitle>Job Listing Views</CardTitle>
-          <CardDescription>
-            Number of views per job listing
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-60 md:h-64">
-            <ChartContainer
-              config={{
-                views: {
-                  label: "Views",
-                  color: "#0EA5E9",
-                },
-              }}
-            >
-              <BarChart data={jobViewsData} layout="vertical">
-                <XAxis type="number" tickLine={false} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={150} 
-                  tickLine={false}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip />
-                <Bar
-                  dataKey="views"
-                  fill="var(--color-views, #0EA5E9)"
-                  radius={[0, 4, 4, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
