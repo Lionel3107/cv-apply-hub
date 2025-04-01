@@ -26,6 +26,7 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -33,13 +34,30 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
+    
     if (e.target.files && e.target.files[0]) {
-      setResumeFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Check if file is PDF
+      if (file.type !== 'application/pdf') {
+        setFileError("Only PDF files are accepted. Please upload a PDF file.");
+        return;
+      }
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setFileError("File is too large. Maximum size is 5MB.");
+        return;
+      }
+      
+      setResumeFile(file);
     }
   };
   
   const removeFile = () => {
     setResumeFile(null);
+    setFileError(null);
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -119,7 +137,7 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
           </div>
           
           <div>
-            <Label htmlFor="resume">Resume/CV *</Label>
+            <Label htmlFor="resume">Resume/CV (PDF only) *</Label>
             {resumeFile ? (
               <div className="flex items-center p-3 border rounded-md bg-gray-50">
                 <div className="flex-1 truncate">
@@ -142,18 +160,21 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
                 >
                   <FileUp className="mb-2 text-gray-400" />
                   <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                  <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX up to 5MB</p>
+                  <p className="text-xs text-gray-500 mt-1">PDF files only, up to 5MB</p>
                 </div>
                 <input
                   id="resume"
                   name="resume"
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,application/pdf"
                   className="hidden"
                   onChange={handleFileChange}
                   required
                 />
               </div>
+            )}
+            {fileError && (
+              <p className="text-sm text-red-500 mt-1">{fileError}</p>
             )}
           </div>
           
@@ -173,7 +194,7 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
         <Button 
           type="submit" 
           className="w-full mt-6 bg-brand-blue hover:bg-brand-darkBlue"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !!fileError}
         >
           {isSubmitting ? "Submitting..." : "Submit Application"}
         </Button>

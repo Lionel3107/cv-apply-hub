@@ -19,7 +19,8 @@ import {
   Star, 
   StarHalf, 
   Edit,
-  Trash2
+  Trash2,
+  FileText
 } from "lucide-react";
 import {
   Dialog,
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-// Enhanced mock applicants data with skills and ranking information
+// Enhanced mock applicants data with skills, ranking, and cover letter information
 const mockApplicants = [
   {
     id: "1",
@@ -44,7 +45,8 @@ const mockApplicants = [
     skills: ["React", "TypeScript", "Next.js", "Tailwind CSS"],
     experience: "5 years",
     education: "BS Computer Science",
-    ranking: 4.5
+    ranking: 4.5,
+    coverLetter: "I am excited to apply for the Senior Frontend Developer position. With 5 years of experience building modern web applications using React, TypeScript, and Next.js, I believe I would be a valuable addition to your team. I'm particularly interested in your company because of your focus on user experience and innovative products."
   },
   {
     id: "2",
@@ -57,7 +59,8 @@ const mockApplicants = [
     skills: ["Figma", "Adobe XD", "User Research", "Prototyping"],
     experience: "3 years",
     education: "MA Design",
-    ranking: 4.0
+    ranking: 4.0,
+    coverLetter: "As a UX Designer with 3 years of experience, I'm passionate about creating intuitive and engaging user experiences. I've worked on various projects ranging from e-commerce to healthcare applications, always focusing on user needs and business goals. I'm excited about the possibility of bringing my skills to your team."
   },
   {
     id: "3",
@@ -70,7 +73,8 @@ const mockApplicants = [
     skills: ["Agile", "Scrum", "Product Strategy", "User Stories"],
     experience: "7 years",
     education: "MBA",
-    ranking: 3.0
+    ranking: 3.0,
+    coverLetter: "I am writing to express my interest in the Product Manager position. With 7 years of experience in product management across various industries, I have a proven track record of delivering successful products that meet both user needs and business objectives. My approach to product management is data-driven and user-centered."
   },
   {
     id: "4",
@@ -83,7 +87,8 @@ const mockApplicants = [
     skills: ["Node.js", "Express", "MongoDB", "AWS"],
     experience: "4 years",
     education: "MS Computer Engineering",
-    ranking: 4.8
+    ranking: 4.8,
+    coverLetter: "I'm applying for the Backend Developer role at your company. With 4 years of specialized experience in Node.js and cloud infrastructure, I've built scalable systems that handle millions of requests daily. I'm particularly impressed by your company's innovative approach to technology and would love to contribute to your team."
   },
   {
     id: "5",
@@ -96,13 +101,15 @@ const mockApplicants = [
     skills: ["SEO", "Content Marketing", "Social Media", "Analytics"],
     experience: "2 years",
     education: "BS Marketing",
-    ranking: 3.5
+    ranking: 3.5,
+    coverLetter: "I am excited to apply for the Marketing Specialist position. With 2 years of experience in digital marketing, I've developed successful marketing campaigns that have increased brand awareness and customer engagement. I'm particularly interested in your company's focus on sustainable products and would love to contribute to your mission."
   }
 ];
 
 export const CompanyDashboardApplicants = () => {
   const [applicants, setApplicants] = useState(mockApplicants);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [coverLetterDialogOpen, setCoverLetterDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<(typeof mockApplicants)[0] | null>(null);
 
   const getStatusBadge = (status: string) => {
@@ -147,6 +154,11 @@ export const CompanyDashboardApplicants = () => {
       setDeleteDialogOpen(false);
       setSelectedApplicant(null);
     }
+  };
+
+  const handleViewCoverLetter = (applicant: (typeof mockApplicants)[0]) => {
+    setSelectedApplicant(applicant);
+    setCoverLetterDialogOpen(true);
   };
 
   const handleEditApplicant = (applicant: (typeof mockApplicants)[0]) => {
@@ -220,6 +232,14 @@ export const CompanyDashboardApplicants = () => {
                     <Button variant="outline" size="sm" onClick={() => handleViewApplicant(applicant)}>
                       <Eye className="h-4 w-4" />
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewCoverLetter(applicant)}
+                      className="text-blue-500 border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEditApplicant(applicant)}>
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -259,6 +279,7 @@ export const CompanyDashboardApplicants = () => {
         </Table>
       </div>
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -274,6 +295,28 @@ export const CompanyDashboardApplicants = () => {
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cover Letter Dialog */}
+      <Dialog open={coverLetterDialogOpen} onOpenChange={setCoverLetterDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Cover Letter - {selectedApplicant?.name}</DialogTitle>
+            <DialogDescription>
+              Application for: {selectedApplicant?.jobTitle}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 bg-gray-50 p-4 rounded-md max-h-96 overflow-y-auto">
+            <p className="whitespace-pre-line text-gray-700">
+              {selectedApplicant?.coverLetter || "No cover letter provided."}
+            </p>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setCoverLetterDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
