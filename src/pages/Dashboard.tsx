@@ -32,19 +32,19 @@ const Dashboard = () => {
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="insights">Insights</TabsTrigger>
             </TabsList>
-            <TabsContent value="jobs">
+            <TabsContent value="jobs" className="animate-fade-in">
               <CompanyDashboardJobs />
             </TabsContent>
-            <TabsContent value="applicants">
+            <TabsContent value="applicants" className="animate-fade-in">
               <CompanyDashboardApplicants />
             </TabsContent>
-            <TabsContent value="tasks">
+            <TabsContent value="tasks" className="animate-fade-in">
               <CompanyDashboardTasks />
             </TabsContent>
-            <TabsContent value="schedule">
+            <TabsContent value="schedule" className="animate-fade-in">
               <CompanyDashboardSchedule />
             </TabsContent>
-            <TabsContent value="insights">
+            <TabsContent value="insights" className="animate-fade-in">
               <CompanyDashboardInsights />
             </TabsContent>
           </Tabs>

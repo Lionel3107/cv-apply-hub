@@ -76,7 +76,7 @@ export const CompanyDashboardInsights = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="animate-fade-in">
           <CardHeader>
             <CardTitle>Applications Over Time</CardTitle>
             <CardDescription>
@@ -84,7 +84,7 @@ export const CompanyDashboardInsights = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-60 md:h-64">
               <ChartContainer
                 config={{
                   applications: {
@@ -94,13 +94,13 @@ export const CompanyDashboardInsights = () => {
                 }}
               >
                 <BarChart data={applicationData}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="name" tickLine={false} />
+                  <YAxis tickLine={false} />
                   <Tooltip />
                   <Bar
                     dataKey="applications"
                     fill="var(--color-applications, #8B5CF6)"
-                    radius={4}
+                    radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
               </ChartContainer>
@@ -108,7 +108,7 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="animate-fade-in">
           <CardHeader>
             <CardTitle>Application Sources</CardTitle>
             <CardDescription>
@@ -116,7 +116,7 @@ export const CompanyDashboardInsights = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className="h-60 md:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -124,7 +124,7 @@ export const CompanyDashboardInsights = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    outerRadius={100}
+                    outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -141,7 +141,7 @@ export const CompanyDashboardInsights = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="animate-fade-in">
         <CardHeader>
           <CardTitle>Job Listing Views</CardTitle>
           <CardDescription>
@@ -149,7 +149,7 @@ export const CompanyDashboardInsights = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-60 md:h-64">
             <ChartContainer
               config={{
                 views: {
@@ -159,13 +159,19 @@ export const CompanyDashboardInsights = () => {
               }}
             >
               <BarChart data={jobViewsData} layout="vertical">
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={150} />
+                <XAxis type="number" tickLine={false} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={150} 
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip />
                 <Bar
                   dataKey="views"
                   fill="var(--color-views, #0EA5E9)"
-                  radius={4}
+                  radius={[0, 4, 4, 0]}
                 />
               </BarChart>
             </ChartContainer>
