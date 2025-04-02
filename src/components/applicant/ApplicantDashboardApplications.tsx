@@ -16,11 +16,11 @@ import { mockApplicantApplications } from "@/data/mockApplicantApplications";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ApplicationDetailsDialog } from "./ApplicationDetailsDialog";
-import { ApplicationStatus, ApplicantApplication } from "@/types/applicant";
+import { ApplicationStatus } from "@/types/applicant";
 
 export const ApplicantDashboardApplications = () => {
   const [applications, setApplications] = useState(mockApplicantApplications);
-  const [selectedApplication, setSelectedApplication] = useState<ApplicantApplication | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const getStatusBadge = (status: ApplicationStatus) => {
@@ -40,12 +40,12 @@ export const ApplicantDashboardApplications = () => {
     }
   };
 
-  const handleViewDetails = (application: ApplicantApplication) => {
+  const handleViewDetails = (application) => {
     setSelectedApplication(application);
     setDetailsOpen(true);
   };
 
-  const handleContactEmployer = (application: ApplicantApplication) => {
+  const handleContactEmployer = (application) => {
     toast.info(`Contact functionality will be implemented soon for ${application.companyName}`);
   };
 
