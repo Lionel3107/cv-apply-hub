@@ -9,6 +9,7 @@ import { CompanyDashboardTasks } from "@/components/CompanyDashboardTasks";
 import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
 import { JobApplicantsView } from "@/components/JobApplicantsView";
 import { Job } from "@/types/job";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("jobs");
@@ -34,30 +35,32 @@ const Dashboard = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="jobs" onValueChange={setActiveTab}>
-            <TabsList className="mb-8">
-              <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
-              <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="schedule">Schedule</TabsTrigger>
-              <TabsTrigger value="insights">Insights</TabsTrigger>
-            </TabsList>
-            <TabsContent value="jobs" className="animate-fade-in">
-              {selectedJob ? (
-                <JobApplicantsView job={selectedJob} onBack={handleBackToJobs} />
-              ) : (
-                <CompanyDashboardJobs onSelectJob={handleSelectJob} />
-              )}
-            </TabsContent>
-            <TabsContent value="tasks" className="animate-fade-in">
-              <CompanyDashboardTasks />
-            </TabsContent>
-            <TabsContent value="schedule" className="animate-fade-in">
-              <CompanyDashboardSchedule />
-            </TabsContent>
-            <TabsContent value="insights" className="animate-fade-in">
-              <CompanyDashboardInsights />
-            </TabsContent>
-          </Tabs>
+          <TooltipProvider>
+            <Tabs defaultValue="jobs" onValueChange={setActiveTab}>
+              <TabsList className="mb-8">
+                <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                <TabsTrigger value="schedule">Schedule</TabsTrigger>
+                <TabsTrigger value="insights">Insights</TabsTrigger>
+              </TabsList>
+              <TabsContent value="jobs" className="animate-fade-in">
+                {selectedJob ? (
+                  <JobApplicantsView job={selectedJob} onBack={handleBackToJobs} />
+                ) : (
+                  <CompanyDashboardJobs onSelectJob={handleSelectJob} />
+                )}
+              </TabsContent>
+              <TabsContent value="tasks" className="animate-fade-in">
+                <CompanyDashboardTasks />
+              </TabsContent>
+              <TabsContent value="schedule" className="animate-fade-in">
+                <CompanyDashboardSchedule />
+              </TabsContent>
+              <TabsContent value="insights" className="animate-fade-in">
+                <CompanyDashboardInsights />
+              </TabsContent>
+            </Tabs>
+          </TooltipProvider>
         </div>
       </main>
       <Footer />
