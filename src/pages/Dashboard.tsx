@@ -7,6 +7,7 @@ import { CompanyDashboardJobs } from "@/components/CompanyDashboardJobs";
 import { CompanyDashboardInsights } from "@/components/CompanyDashboardInsights";
 import { CompanyDashboardTasks } from "@/components/CompanyDashboardTasks";
 import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
+import { CompanyDashboardBestApplicants } from "@/components/CompanyDashboardBestApplicants";
 import { JobApplicantsView } from "@/components/JobApplicantsView";
 import { Job } from "@/types/job";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,6 +40,7 @@ const Dashboard = () => {
             <Tabs defaultValue="jobs" onValueChange={setActiveTab}>
               <TabsList className="mb-8">
                 <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
+                <TabsTrigger value="best-applicants">Best Applicants</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="schedule">Schedule</TabsTrigger>
                 <TabsTrigger value="insights">Insights</TabsTrigger>
@@ -49,6 +51,9 @@ const Dashboard = () => {
                 ) : (
                   <CompanyDashboardJobs onSelectJob={handleSelectJob} />
                 )}
+              </TabsContent>
+              <TabsContent value="best-applicants" className="animate-fade-in">
+                <CompanyDashboardBestApplicants />
               </TabsContent>
               <TabsContent value="tasks" className="animate-fade-in">
                 <CompanyDashboardTasks />

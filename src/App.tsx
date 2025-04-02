@@ -13,6 +13,7 @@ import CategoryPage from "./pages/CategoryPage";
 import ApplicationSuccess from "./pages/ApplicationSuccess";
 import PostJob from "./pages/PostJob";
 import Dashboard from "./pages/Dashboard";
+import ApplicantDashboard from "./pages/ApplicantDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
         <Route path="/application-success" element={<ApplicationSuccess />} />
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -1,4 +1,6 @@
 
+export type ApplicationStatus = "new" | "shortlisted" | "interviewed" | "rejected" | "hired";
+
 export interface Applicant {
   id: string;
   name: string;
@@ -6,9 +8,30 @@ export interface Applicant {
   jobTitle: string;
   appliedDate: string;
   resumeUrl: string;
-  action: "new" | "shortlisted" | "interviewed" | "rejected" | "hired";
+  action: ApplicationStatus;
   skills: string[];
   experience: string;
   education: string;
   coverLetter: string;
+}
+
+export interface ApplicantApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  companyLogo?: string;
+  appliedDate: string;
+  status: ApplicationStatus;
+  statusUpdates: {
+    status: ApplicationStatus;
+    date: string;
+  }[];
+  feedback: string | null;
+  nextSteps: string | null;
+}
+
+export interface ApplicantWithScore extends Applicant {
+  score: number;
+  avatar?: string;
 }
