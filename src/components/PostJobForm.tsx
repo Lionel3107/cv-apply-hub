@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Briefcase, MapPin, Building, Tag, DollarSign, Calendar } from "lucide-react";
+import { Briefcase, MapPin, Building, Tag, DollarSign, Calendar, Globe, Mail, Phone } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -46,6 +46,10 @@ const formSchema = z.object({
     message: "Benefits must be at least 20 characters.",
   }),
   salary: z.string().optional(),
+  companyWebsite: z.string().optional(),
+  companyEmail: z.string().email().optional(),
+  companyPhone: z.string().optional(),
+  companyDescription: z.string().optional(),
   isRemote: z.boolean().default(false),
   featured: z.boolean().default(false),
 });
@@ -58,6 +62,7 @@ interface PostJobFormProps {
 
 export function PostJobForm({ onJobPosted }: PostJobFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCompanyProfile, setShowCompanyProfile] = useState(false);
 
   // Initialize the form with default values
   const form = useForm<FormValues>({
@@ -72,6 +77,10 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
       requirements: "",
       benefits: "",
       salary: "",
+      companyWebsite: "",
+      companyEmail: "",
+      companyPhone: "",
+      companyDescription: "",
       isRemote: false,
       featured: false,
     },
@@ -98,6 +107,12 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
         postedDate: new Date().toISOString(),
         featured: values.featured,
         isRemote: values.isRemote,
+        companyProfile: {
+          website: values.companyWebsite || "",
+          email: values.companyEmail || "",
+          phone: values.companyPhone || "",
+          description: values.companyDescription || "",
+        }
       };
       
       // In a real app, we would add this to the database
@@ -329,6 +344,94 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
               </FormItem>
             )}
           />
+        </div>
+        
+        <div className="space-y-4">
+          <div 
+            className="flex justify-between items-center border-b pb-2 cursor-pointer"
+            onClick={() => setShowCompanyProfile(!showCompanyProfile)}
+          >
+            <h2 className="text-xl font-semibold">Company Profile</h2>
+            <Button type="button" variant="ghost" size="sm">
+              {showCompanyProfile ? "Hide" : "Show"}
+            </Button>
+          </div>
+          
+          {showCompanyProfile && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+              <FormField
+                control={form.control}
+                name="companyWebsite"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Website</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <Input placeholder="e.g. https://www.company.com" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="companyEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <Input placeholder="e.g. info@company.com" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="companyPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Phone</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <Input placeholder="e.g. (123) 456-7890" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="companyDescription"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Company Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your company, culture, mission, etc."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      This will be displayed to applicants when they view your company profile
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
         </div>
         
         <Button 

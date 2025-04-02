@@ -3,7 +3,6 @@ import { Applicant } from "@/types/applicant";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ApplicantActions } from "./ApplicantActions";
-import { getStatusBadge, getRankingStars } from "@/utils/applicantUtils";
 
 interface ApplicantRowProps {
   applicant: Applicant;
@@ -11,6 +10,7 @@ interface ApplicantRowProps {
   onViewCoverLetter: (applicant: Applicant) => void;
   onEditApplicant: (applicant: Applicant) => void;
   onDeleteApplicant: (applicant: Applicant) => void;
+  onChangeAction: (applicant: Applicant, action: Applicant["action"]) => void;
 }
 
 export const ApplicantRow = ({
@@ -18,8 +18,26 @@ export const ApplicantRow = ({
   onViewApplicant,
   onViewCoverLetter,
   onEditApplicant,
-  onDeleteApplicant
+  onDeleteApplicant,
+  onChangeAction
 }: ApplicantRowProps) => {
+  const getActionBadge = (action: Applicant["action"]) => {
+    switch (action) {
+      case "new":
+        return <Badge className="bg-blue-500">New</Badge>;
+      case "shortlisted":
+        return <Badge className="bg-purple-500">Shortlisted</Badge>;
+      case "interviewed":
+        return <Badge className="bg-orange-500">Interviewed</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejected</Badge>;
+      case "hired":
+        return <Badge className="bg-green-500">Hired</Badge>;
+      default:
+        return <Badge className="bg-gray-500">Unknown</Badge>;
+    }
+  };
+
   return (
     <TableRow key={applicant.id}>
       <TableCell>
@@ -44,10 +62,7 @@ export const ApplicantRow = ({
         </div>
       </TableCell>
       <TableCell>
-        {getRankingStars(applicant.ranking)}
-      </TableCell>
-      <TableCell>
-        {getStatusBadge(applicant.status)}
+        {getActionBadge(applicant.action)}
       </TableCell>
       <TableCell className="text-right">
         <ApplicantActions 
@@ -56,6 +71,7 @@ export const ApplicantRow = ({
           onViewCoverLetter={onViewCoverLetter}
           onEditApplicant={onEditApplicant}
           onDeleteApplicant={onDeleteApplicant}
+          onChangeAction={onChangeAction}
         />
       </TableCell>
     </TableRow>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -24,13 +24,12 @@ interface JobApplicantsViewProps {
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [coverLetterDialogOpen, setCoverLetterDialogOpen] = React.useState(false);
-  const [selectedApplicant, setSelectedApplicant] = React.useState<Applicant | null>(null);
-
-  // Filter mock applicants - in a real app, this would come from the API
-  // For now, we'll just show all applicants for the demo
-  const jobApplicants = mockApplicants.slice(0, Math.floor(Math.random() * 5) + 1);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [coverLetterDialogOpen, setCoverLetterDialogOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [jobApplicants, setJobApplicants] = useState<Applicant[]>(
+    mockApplicants.slice(0, Math.floor(Math.random() * 5) + 1)
+  );
 
   const handleDeleteClick = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
@@ -39,6 +38,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
 
   const confirmDelete = () => {
     if (selectedApplicant) {
+      setJobApplicants(jobApplicants.filter(app => app.id !== selectedApplicant.id));
       toast.success(`Applicant ${selectedApplicant.name} removed successfully`);
       setDeleteDialogOpen(false);
       setSelectedApplicant(null);
@@ -58,6 +58,23 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const handleViewApplicant = (applicant: Applicant) => {
     // In a real app, this would navigate to a detailed view
     toast.info(`Viewing applicant: ${applicant.name}`);
+  };
+  
+  const handleChangeAction = (applicant: Applicant, action: Applicant["action"]) => {
+    const updatedApplicants = jobApplicants.map(app => 
+      app.id === applicant.id ? { ...app, action } : app
+    );
+    setJobApplicants(updatedApplicants);
+    
+    const actionMessages = {
+      new: "marked as new",
+      shortlisted: "shortlisted",
+      interviewed: "marked as interviewed",
+      rejected: "rejected",
+      hired: "hired"
+    };
+    
+    toast.success(`Applicant ${applicant.name} ${actionMessages[action]}`);
   };
 
   return (
@@ -94,6 +111,50 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
               <p className="font-medium">{job.type}</p>
             </div>
           </div>
+          
+          {job.companyProfile && (
+            <div className="mt-4 border-t pt-4">
+              <p className="font-medium mb-2">Company Profile</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {job.companyProfile.website && (
+                  <div>
+                    <p className="text-sm text-gray-500">Website</p>
+                    <a 
+                      href={job.companyProfile.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-blue hover:underline"
+                    >
+                      {job.companyProfile.website}
+                    </a>
+                  </div>
+                )}
+                {job.companyProfile.email && (
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <a 
+                      href={`mailto:${job.companyProfile.email}`}
+                      className="text-brand-blue hover:underline"
+                    >
+                      {job.companyProfile.email}
+                    </a>
+                  </div>
+                )}
+                {job.companyProfile.phone && (
+                  <div>
+                    <p className="text-sm text-gray-500">Phone</p>
+                    <p>{job.companyProfile.phone}</p>
+                  </div>
+                )}
+              </div>
+              {job.companyProfile.description && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">About the Company</p>
+                  <p className="text-sm">{job.companyProfile.description}</p>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -102,9 +163,9 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
           <TableHeader>
             <TableRow>
               <TableHead>Applicant</TableHead>
+              <TableHead>Job Title</TableHead>
               <TableHead>Skills & Qualifications</TableHead>
-              <TableHead>Ranking</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Action</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -118,6 +179,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                   onViewCoverLetter={handleViewCoverLetter}
                   onEditApplicant={handleEditApplicant}
                   onDeleteApplicant={handleDeleteClick}
+                  onChangeAction={handleChangeAction}
                 />
               ))
             ) : (

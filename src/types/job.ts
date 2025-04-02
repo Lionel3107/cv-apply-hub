@@ -15,4 +15,10 @@ export interface Job {
   postedDate: string;
   featured: boolean;
   isRemote: boolean;
+  companyProfile?: {
+    website?: string;
+    email?: string;
+    phone?: string;
+    description?: string;
+  };
 }

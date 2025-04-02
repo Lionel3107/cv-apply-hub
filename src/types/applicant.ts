@@ -6,10 +6,9 @@ export interface Applicant {
   jobTitle: string;
   appliedDate: string;
   resumeUrl: string;
-  status: "new" | "shortlisted" | "interviewed" | "rejected";
+  action: "new" | "shortlisted" | "interviewed" | "rejected" | "hired";
   skills: string[];
   experience: string;
   education: string;
-  ranking: number;
   coverLetter: string;
 }
