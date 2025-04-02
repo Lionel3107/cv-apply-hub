@@ -12,29 +12,55 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Star, Download } from "lucide-react";
+import { Eye, Star, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockApplicantsWithScore } from "@/data/mockApplicantsWithScore";
+import { mockJobs } from "@/data/mockJobs";
 import { toast } from "sonner";
 
+// Associate applicants with jobs
+const applicantsByJob = [
+  {
+    jobId: "1",
+    jobTitle: "Frontend Developer",
+    applicants: mockApplicantsWithScore.slice(0, 3)
+  },
+  {
+    jobId: "2",
+    jobTitle: "UX Designer",
+    applicants: mockApplicantsWithScore.slice(3, 5)
+  },
+  {
+    jobId: "3",
+    jobTitle: "Backend Developer",
+    applicants: mockApplicantsWithScore.slice(5)
+  }
+];
+
 export const CompanyDashboardBestApplicants = () => {
-  const [applicants, setApplicants] = useState(mockApplicantsWithScore);
+  const [expandedJob, setExpandedJob] = useState<string | null>("1");
   const [sortBy, setSortBy] = useState("scoreDesc");
   
-  const sortedApplicants = [...applicants].sort((a, b) => {
-    switch (sortBy) {
-      case "scoreDesc":
-        return b.score - a.score;
-      case "scoreAsc":
-        return a.score - b.score;
-      case "experienceDesc":
-        return parseInt(b.experience) - parseInt(a.experience);
-      case "nameAsc":
-        return a.name.localeCompare(b.name);
-      default:
-        return b.score - a.score;
-    }
-  });
+  const handleToggleJob = (jobId: string) => {
+    setExpandedJob(expandedJob === jobId ? null : jobId);
+  };
+  
+  const sortApplicants = (applicants) => {
+    return [...applicants].sort((a, b) => {
+      switch (sortBy) {
+        case "scoreDesc":
+          return b.score - a.score;
+        case "scoreAsc":
+          return a.score - b.score;
+        case "experienceDesc":
+          return parseInt(b.experience) - parseInt(a.experience);
+        case "nameAsc":
+          return a.name.localeCompare(b.name);
+        default:
+          return b.score - a.score;
+      }
+    });
+  };
   
   const handleSort = (value) => {
     setSortBy(value);
@@ -78,9 +104,9 @@ export const CompanyDashboardBestApplicants = () => {
   };
   
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl">Top Applicant Matches</CardTitle>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Best Applicants by Job</h2>
         <Select value={sortBy} onValueChange={handleSort}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
@@ -92,80 +118,94 @@ export const CompanyDashboardBestApplicants = () => {
             <SelectItem value="nameAsc">Name (A-Z)</SelectItem>
           </SelectContent>
         </Select>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Applicant</TableHead>
-                <TableHead>Match Score</TableHead>
-                <TableHead>Key Skills</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedApplicants.map((applicant) => (
-                <TableRow key={applicant.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarImage src={applicant.avatar} />
-                        <AvatarFallback>{applicant.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{applicant.name}</div>
-                        <div className="text-sm text-gray-500">{applicant.jobTitle}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className={`font-bold ${getScoreColor(applicant.score)}`}>
-                      {renderStars(applicant.score)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {applicant.skills.slice(0, 3).map((skill, i) => (
-                        <Badge key={i} variant="secondary" className="bg-blue-50">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {applicant.skills.length > 3 && (
-                        <Badge variant="outline" className="bg-gray-50">
-                          +{applicant.skills.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{applicant.experience}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewProfile(applicant)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Profile
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadCV(applicant)}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        CV
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {applicantsByJob.map((job) => (
+        <Card key={job.jobId} className="mb-4">
+          <CardHeader className="flex flex-row items-center justify-between py-3 cursor-pointer" onClick={() => handleToggleJob(job.jobId)}>
+            <CardTitle className="text-lg">{job.jobTitle}</CardTitle>
+            <Button variant="ghost" size="icon">
+              {expandedJob === job.jobId ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </Button>
+          </CardHeader>
+          
+          {expandedJob === job.jobId && (
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Applicant</TableHead>
+                      <TableHead>Match Score</TableHead>
+                      <TableHead>Key Skills</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortApplicants(job.applicants).map((applicant) => (
+                      <TableRow key={applicant.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar>
+                              <AvatarImage src={applicant.avatar} />
+                              <AvatarFallback>{applicant.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{applicant.name}</div>
+                              <div className="text-sm text-gray-500">{applicant.jobTitle}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`font-bold ${getScoreColor(applicant.score)}`}>
+                            {renderStars(applicant.score)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {applicant.skills.slice(0, 3).map((skill, i) => (
+                              <Badge key={i} variant="secondary" className="bg-blue-50">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {applicant.skills.length > 3 && (
+                              <Badge variant="outline" className="bg-gray-50">
+                                +{applicant.skills.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{applicant.experience}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewProfile(applicant)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Profile
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDownloadCV(applicant)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              CV
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      ))}
+    </div>
   );
 };

@@ -26,7 +26,7 @@ export const CompanyDashboardInsights = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Total Jobs</CardTitle>
@@ -53,7 +53,7 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="sm:col-span-2 md:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Conversion Rate</CardTitle>
             <CardDescription>Views to applications</CardDescription>
@@ -76,26 +76,19 @@ export const CompanyDashboardInsights = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-60 md:h-64">
-              <ChartContainer
-                config={{
-                  applications: {
-                    label: "Applications",
-                    color: "#8B5CF6",
-                  },
-                }}
-              >
-                <BarChart data={applicationData}>
+            <div className="h-60 md:h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={applicationData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <XAxis dataKey="name" tickLine={false} />
                   <YAxis tickLine={false} />
                   <Tooltip />
                   <Bar
                     dataKey="applications"
-                    fill="var(--color-applications, #8B5CF6)"
+                    fill="#8B5CF6"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -108,7 +101,7 @@ export const CompanyDashboardInsights = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-60 md:h-64">
+            <div className="h-60 md:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -116,7 +109,7 @@ export const CompanyDashboardInsights = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    outerRadius={80}
+                    outerRadius="80%"
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}

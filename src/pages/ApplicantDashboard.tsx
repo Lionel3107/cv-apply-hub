@@ -7,6 +7,8 @@ import { ApplicantDashboardApplications } from "@/components/applicant/Applicant
 import { ApplicantDashboardCVGenerator } from "@/components/applicant/ApplicantDashboardCVGenerator";
 import { ApplicantDashboardProfile } from "@/components/applicant/ApplicantDashboardProfile";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ApplicantDashboardFeedback } from "@/components/applicant/ApplicantDashboardFeedback";
+import { ApplicantDashboardLinkedInImport } from "@/components/applicant/ApplicantDashboardLinkedInImport";
 
 const ApplicantDashboard = () => {
   const [activeTab, setActiveTab] = useState("applications");
@@ -25,9 +27,11 @@ const ApplicantDashboard = () => {
 
           <TooltipProvider>
             <Tabs defaultValue="applications" onValueChange={setActiveTab}>
-              <TabsList className="mb-8">
+              <TabsList className="mb-8 flex flex-wrap">
                 <TabsTrigger value="applications">My Applications</TabsTrigger>
                 <TabsTrigger value="cv-generator">CV Generator</TabsTrigger>
+                <TabsTrigger value="linkedin-import">LinkedIn Import</TabsTrigger>
+                <TabsTrigger value="feedback">Feedback</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
               </TabsList>
               <TabsContent value="applications" className="animate-fade-in">
@@ -35,6 +39,12 @@ const ApplicantDashboard = () => {
               </TabsContent>
               <TabsContent value="cv-generator" className="animate-fade-in">
                 <ApplicantDashboardCVGenerator />
+              </TabsContent>
+              <TabsContent value="linkedin-import" className="animate-fade-in">
+                <ApplicantDashboardLinkedInImport />
+              </TabsContent>
+              <TabsContent value="feedback" className="animate-fade-in">
+                <ApplicantDashboardFeedback />
               </TabsContent>
               <TabsContent value="profile" className="animate-fade-in">
                 <ApplicantDashboardProfile />
