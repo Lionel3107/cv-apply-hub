@@ -8,9 +8,20 @@ import { CompanyDashboardInsights } from "@/components/CompanyDashboardInsights"
 import { CompanyDashboardApplicants } from "@/components/CompanyDashboardApplicants";
 import { CompanyDashboardTasks } from "@/components/CompanyDashboardTasks";
 import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
+import { JobApplicantsView } from "@/components/JobApplicantsView";
+import { Job } from "@/types/job";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("jobs");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  const handleSelectJob = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleBackToJobs = () => {
+    setSelectedJob(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -27,13 +38,17 @@ const Dashboard = () => {
           <Tabs defaultValue="jobs" onValueChange={setActiveTab}>
             <TabsList className="mb-8">
               <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
-              <TabsTrigger value="applicants">Applicants</TabsTrigger>
+              <TabsTrigger value="applicants">All Applicants</TabsTrigger>
               <TabsTrigger value="tasks">Tasks</TabsTrigger>
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="insights">Insights</TabsTrigger>
             </TabsList>
             <TabsContent value="jobs" className="animate-fade-in">
-              <CompanyDashboardJobs />
+              {selectedJob ? (
+                <JobApplicantsView job={selectedJob} onBack={handleBackToJobs} />
+              ) : (
+                <CompanyDashboardJobs onSelectJob={handleSelectJob} />
+              )}
             </TabsContent>
             <TabsContent value="applicants" className="animate-fade-in">
               <CompanyDashboardApplicants />

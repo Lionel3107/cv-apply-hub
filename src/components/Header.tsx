@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home } from 'lucide-react';
 import { Button } from './ui/button';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -25,6 +25,17 @@ const Header = () => {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
+            <Link 
+              to="/" 
+              className={`transition-colors flex items-center ${
+                isActive('/') && !isActive('/jobs') && !isActive('/companies') && !isActive('/about')
+                  ? 'text-brand-blue font-medium' 
+                  : 'text-gray-700 hover:text-brand-blue'
+              }`}
+            >
+              <Home size={18} className="mr-1" />
+              Home
+            </Link>
             <Link 
               to="/jobs" 
               className={`transition-colors ${
@@ -75,6 +86,18 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
+            <Link 
+              to="/" 
+              className={`transition-colors py-2 px-4 flex items-center ${
+                isActive('/') && !isActive('/jobs') && !isActive('/companies') && !isActive('/about')
+                  ? 'text-brand-blue font-medium' 
+                  : 'text-gray-700 hover:text-brand-blue'
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Home size={18} className="mr-2" />
+              Home
+            </Link>
             <Link 
               to="/jobs" 
               className={`transition-colors py-2 px-4 ${
