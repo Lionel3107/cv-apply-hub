@@ -1,43 +1,45 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import JobCard from "./JobCard";
 import { Button } from "@/components/ui/button";
 import { mockJobs } from "@/data/mockJobs";
+import { ArrowRight } from "lucide-react";
 
 const FeaturedJobs = () => {
-  const [displayCount, setDisplayCount] = useState(6);
+  const navigate = useNavigate();
   const featuredJobs = mockJobs.filter(job => job.featured);
+  const initialDisplayCount = 3; // Show only 3 jobs initially
   
-  const loadMoreJobs = () => {
-    setDisplayCount(prev => prev + 6);
+  const goToAllJobs = () => {
+    navigate("/jobs");
   };
   
   return (
-    <section className="py-16 container mx-auto px-4">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Jobs</h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Discover opportunities from top companies that are actively hiring now.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {featuredJobs.slice(0, displayCount).map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
-      </div>
-      
-      {displayCount < featuredJobs.length && (
-        <div className="text-center mt-12">
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center mb-10">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Featured Jobs</h2>
+            <p className="text-gray-600 mt-2">
+              Discover opportunities from top companies
+            </p>
+          </div>
           <Button 
-            onClick={loadMoreJobs} 
-            variant="outline" 
-            className="border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
+            onClick={goToAllJobs} 
+            variant="ghost" 
+            className="text-brand-blue hover:text-brand-darkBlue flex items-center gap-2"
           >
-            Load More Jobs
+            View all jobs <ArrowRight size={16} />
           </Button>
         </div>
-      )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredJobs.slice(0, initialDisplayCount).map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      </div>
     </section>
   );
 };

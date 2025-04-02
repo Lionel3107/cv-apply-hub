@@ -2,6 +2,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Code, Briefcase, PenTool, BarChart, Server, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import { mockJobs } from "@/data/mockJobs";
 
 interface CategoryProps {
@@ -78,27 +80,38 @@ const CategorySection = () => {
     },
   ];
 
+  // Only display the first 3 categories
+  const displayedCategories = categories.slice(0, 3);
+
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Browse by Category</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Explore job opportunities by industry and find the perfect match for your career goals.
+    <section className="py-16 container mx-auto px-4">
+      <div className="flex justify-between items-center mb-10">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Browse by Category</h2>
+          <p className="text-gray-600 mt-2">
+            Explore job opportunities by industry
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category) => (
-            <Category 
-              key={category.title}
-              title={category.title}
-              count={category.count}
-              icon={category.icon}
-              color={category.color}
-            />
-          ))}
-        </div>
+        <Link to="/jobs">
+          <Button 
+            variant="ghost" 
+            className="text-brand-blue hover:text-brand-darkBlue flex items-center gap-2"
+          >
+            View all categories <ArrowRight size={16} />
+          </Button>
+        </Link>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayedCategories.map((category) => (
+          <Category 
+            key={category.title}
+            title={category.title}
+            count={category.count}
+            icon={category.icon}
+            color={category.color}
+          />
+        ))}
       </div>
     </section>
   );
