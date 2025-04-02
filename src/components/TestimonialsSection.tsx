@@ -1,9 +1,9 @@
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Quote } from "lucide-react";
+import * as React from "react";
 
 const testimonials = [
   {
@@ -44,43 +44,36 @@ const TestimonialsSection = () => {
         </div>
         
         <div className="max-w-5xl mx-auto">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {testimonials.map((testimonial) => (
-                <CarouselItem key={testimonial.id}>
-                  <Card className="border-none shadow-lg mx-4">
-                    <CardContent className="p-8">
-                      <div className="flex justify-center mb-6">
-                        <div className="bg-brand-blue p-3 rounded-full">
-                          <Quote size={24} className="text-white" />
-                        </div>
-                      </div>
-                      <p className="text-gray-700 text-center text-lg mb-6">{testimonial.content}</p>
-                      <div className="flex flex-col items-center">
-                        <Avatar className="h-16 w-16 mb-3">
-                          {testimonial.avatar ? (
-                            <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                          ) : (
-                            <AvatarFallback className="bg-brand-lightBlue text-brand-darkBlue">
-                              {testimonial.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                        <p className="text-gray-600 text-sm">
-                          {testimonial.position} at {testimonial.company}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="hidden md:block">
-              <CarouselPrevious className="-left-6 border-gray-200" />
-              <CarouselNext className="-right-6 border-gray-200" />
-            </div>
-          </Carousel>
+          {/* Simple version without carousel for stability */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial) => (
+              <Card key={testimonial.id} className="border-none shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex justify-center mb-6">
+                    <div className="bg-brand-blue p-3 rounded-full">
+                      <Quote size={24} className="text-white" />
+                    </div>
+                  </div>
+                  <p className="text-gray-700 text-center text-lg mb-6">{testimonial.content}</p>
+                  <div className="flex flex-col items-center">
+                    <Avatar className="h-16 w-16 mb-3">
+                      {testimonial.avatar ? (
+                        <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
+                      ) : (
+                        <AvatarFallback className="bg-brand-lightBlue text-brand-darkBlue">
+                          {testimonial.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                    <p className="text-gray-600 text-sm">
+                      {testimonial.position} at {testimonial.company}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </section>
