@@ -27,7 +27,7 @@ export const CompanyDashboardInsights = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-        <Card>
+        <Card className="h-full">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Total Jobs</CardTitle>
             <CardDescription>Current active job listings</CardDescription>
@@ -40,7 +40,7 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="h-full">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Total Applications</CardTitle>
             <CardDescription>Across all job listings</CardDescription>
@@ -53,7 +53,7 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
         
-        <Card className="sm:col-span-2 md:col-span-1">
+        <Card className="h-full sm:col-span-2 md:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Conversion Rate</CardTitle>
             <CardDescription>Views to applications</CardDescription>
@@ -68,7 +68,7 @@ export const CompanyDashboardInsights = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in w-full">
           <CardHeader>
             <CardTitle>Applications Over Time</CardTitle>
             <CardDescription>
@@ -93,7 +93,7 @@ export const CompanyDashboardInsights = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in w-full">
           <CardHeader>
             <CardTitle>Application Sources</CardTitle>
             <CardDescription>

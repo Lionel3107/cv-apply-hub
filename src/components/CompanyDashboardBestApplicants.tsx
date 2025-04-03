@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Star, Download, ChevronDown, ChevronUp } from "lucide-react";
+import { Eye, Star, Download, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockApplicantsWithScore } from "@/data/mockApplicantsWithScore";
 import { mockJobs } from "@/data/mockJobs";
@@ -40,13 +40,14 @@ const applicantsByJob = [
 export const CompanyDashboardBestApplicants = () => {
   const [expandedJob, setExpandedJob] = useState<string | null>("1");
   const [sortBy, setSortBy] = useState("scoreDesc");
+  const [limitCount, setLimitCount] = useState<number | null>(null);
   
   const handleToggleJob = (jobId: string) => {
     setExpandedJob(expandedJob === jobId ? null : jobId);
   };
   
   const sortApplicants = (applicants) => {
-    return [...applicants].sort((a, b) => {
+    const sorted = [...applicants].sort((a, b) => {
       switch (sortBy) {
         case "scoreDesc":
           return b.score - a.score;
@@ -60,10 +61,20 @@ export const CompanyDashboardBestApplicants = () => {
           return b.score - a.score;
       }
     });
+    
+    if (limitCount) {
+      return sorted.slice(0, limitCount);
+    }
+    
+    return sorted;
   };
   
   const handleSort = (value) => {
     setSortBy(value);
+  };
+
+  const handleLimit = (value) => {
+    setLimitCount(value === "all" ? null : parseInt(value));
   };
   
   const getScoreColor = (score) => {
@@ -105,19 +116,36 @@ export const CompanyDashboardBestApplicants = () => {
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
         <h2 className="text-xl font-bold">Best Applicants by Job</h2>
-        <Select value={sortBy} onValueChange={handleSort}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="scoreDesc">Highest Score</SelectItem>
-            <SelectItem value="scoreAsc">Lowest Score</SelectItem>
-            <SelectItem value="experienceDesc">Most Experience</SelectItem>
-            <SelectItem value="nameAsc">Name (A-Z)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={sortBy} onValueChange={handleSort}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="scoreDesc">Highest Score</SelectItem>
+              <SelectItem value="scoreAsc">Lowest Score</SelectItem>
+              <SelectItem value="experienceDesc">Most Experience</SelectItem>
+              <SelectItem value="nameAsc">Name (A-Z)</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select defaultValue="all" onValueChange={handleLimit}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                <span>Show top</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Applicants</SelectItem>
+              <SelectItem value="5">Top 5</SelectItem>
+              <SelectItem value="10">Top 10</SelectItem>
+              <SelectItem value="15">Top 15</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       {applicantsByJob.map((job) => (
