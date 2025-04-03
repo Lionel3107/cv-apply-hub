@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { 
   Download, 
   Eye, 
-  MessageSquare, 
-  Edit,
-  Trash2,
   FileText,
   Check,
   X,
   Clock,
   ListFilter,
-  UserCheck
+  UserCheck,
+  Trash2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,14 +49,8 @@ export const ApplicantActions = ({
       >
         <FileText className="h-4 w-4" />
       </Button>
-      <Button variant="outline" size="sm" onClick={() => onEditApplicant(applicant)}>
-        <Edit className="h-4 w-4" />
-      </Button>
       <Button variant="outline" size="sm">
         <Download className="h-4 w-4" />
-      </Button>
-      <Button variant="outline" size="sm">
-        <MessageSquare className="h-4 w-4" />
       </Button>
       
       <DropdownMenu>

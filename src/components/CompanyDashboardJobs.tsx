@@ -6,11 +6,41 @@ import { mockJobs } from "@/data/mockJobs";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const CompanyDashboardJobs = ({ onSelectJob }) => {
-  // In a real app, we would filter jobs by the logged-in company
-  // For demo purposes, we'll use the first 5 jobs from mockJobs
-  const companyJobs = mockJobs.slice(0, 5);
+  const [companyJobs, setCompanyJobs] = useState(mockJobs.slice(0, 5));
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+
+  const handleEditJob = (job) => {
+    toast.info(`Editing job: ${job.title}`);
+    // In a real app, this would navigate to an edit form
+  };
+
+  const handleDeleteClick = (job) => {
+    setJobToDelete(job);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (jobToDelete) {
+      setCompanyJobs(companyJobs.filter(job => job.id !== jobToDelete.id));
+      toast.success(`Job "${jobToDelete.title}" deleted successfully`);
+      setDeleteDialogOpen(false);
+      setJobToDelete(null);
+    }
+  };
 
   return (
     <div>
@@ -94,11 +124,20 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
               </Button>
               
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditJob(job)}
+                >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => handleDeleteClick(job)}
+                >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete
                 </Button>
@@ -107,6 +146,23 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
           </Card>
         ))}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the job listing "{jobToDelete?.title}" and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

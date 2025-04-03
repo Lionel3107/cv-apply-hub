@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyDashboardJobs } from "@/components/CompanyDashboardJobs";
 import { CompanyDashboardInsights } from "@/components/CompanyDashboardInsights";
-import { CompanyDashboardTasks } from "@/components/CompanyDashboardTasks";
 import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
 import { CompanyDashboardBestApplicants } from "@/components/CompanyDashboardBestApplicants";
 import { JobApplicantsView } from "@/components/JobApplicantsView";
@@ -32,7 +31,7 @@ const Dashboard = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Company Dashboard</h1>
             <p className="text-gray-600">
-              Manage your job listings, tasks, and schedule
+              Manage your job listings, schedule, and view insights
             </p>
           </div>
 
@@ -41,7 +40,6 @@ const Dashboard = () => {
               <TabsList className="mb-8">
                 <TabsTrigger value="jobs">My Job Listings</TabsTrigger>
                 <TabsTrigger value="best-applicants">Best Applicants</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="schedule">Schedule</TabsTrigger>
                 <TabsTrigger value="insights">Insights</TabsTrigger>
               </TabsList>
@@ -54,9 +52,6 @@ const Dashboard = () => {
               </TabsContent>
               <TabsContent value="best-applicants" className="animate-fade-in">
                 <CompanyDashboardBestApplicants />
-              </TabsContent>
-              <TabsContent value="tasks" className="animate-fade-in">
-                <CompanyDashboardTasks />
               </TabsContent>
               <TabsContent value="schedule" className="animate-fade-in">
                 <CompanyDashboardSchedule />

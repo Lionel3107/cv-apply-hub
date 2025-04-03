@@ -12,6 +12,7 @@ import { ChevronLeft } from "lucide-react";
 import { ApplicantRow } from "./applicants/ApplicantRow";
 import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
 import { DeleteApplicantDialog } from "./applicants/DeleteApplicantDialog";
+import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
 import { mockApplicants } from "@/data/mockApplicants";
 import { Applicant } from "@/types/applicant";
 import { Job } from "@/types/job";
@@ -26,6 +27,7 @@ interface JobApplicantsViewProps {
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [coverLetterDialogOpen, setCoverLetterDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [jobApplicants, setJobApplicants] = useState<Applicant[]>(
     mockApplicants.slice(0, Math.floor(Math.random() * 5) + 1)
@@ -56,8 +58,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   };
 
   const handleViewApplicant = (applicant: Applicant) => {
-    // In a real app, this would navigate to a detailed view
-    toast.info(`Viewing applicant: ${applicant.name}`);
+    setSelectedApplicant(applicant);
+    setProfileDialogOpen(true);
   };
   
   const handleChangeAction = (applicant: Applicant, action: Applicant["action"]) => {
@@ -204,6 +206,12 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         onOpenChange={setDeleteDialogOpen}
         applicant={selectedApplicant}
         onConfirm={confirmDelete}
+      />
+
+      <ApplicantProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+        applicant={selectedApplicant}
       />
     </div>
   );
