@@ -7,10 +7,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Calendar, Mail, MapPin, Phone, User } from "lucide-react";
+import { Briefcase, Calendar, Mail, MapPin, Phone, User, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface ApplicantProfileDialogProps {
   open: boolean;
@@ -23,6 +27,9 @@ export const ApplicantProfileDialog = ({
   onOpenChange,
   applicant,
 }: ApplicantProfileDialogProps) => {
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState("");
+  
   if (!applicant) return null;
 
   const getActionBadge = (action: string) => {
@@ -40,6 +47,18 @@ export const ApplicantProfileDialog = ({
       default:
         return <Badge className="bg-gray-500">Unknown</Badge>;
     }
+  };
+  
+  const handleSendMessage = () => {
+    if (!message.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+    
+    // In a real app, this would send the message to the applicant
+    toast.success(`Message sent to ${applicant.name}`);
+    setMessage("");
+    setShowMessageForm(false);
   };
 
   return (
@@ -114,11 +133,39 @@ export const ApplicantProfileDialog = ({
           </div>
         </div>
 
-        <div className="mt-4 border-t pt-4 flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </div>
+        {showMessageForm ? (
+          <div className="mt-4 border-t pt-4">
+            <h4 className="font-medium text-gray-700 mb-2">Send Message to Applicant</h4>
+            <Textarea
+              placeholder="Write your message here..."
+              className="min-h-[120px]"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <Button variant="outline" onClick={() => setShowMessageForm(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSendMessage}>
+                Send Message
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <DialogFooter className="mt-4 border-t pt-4 flex justify-between sm:justify-between flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowMessageForm(true)}
+              className="flex items-center gap-1"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Message Applicant
+            </Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

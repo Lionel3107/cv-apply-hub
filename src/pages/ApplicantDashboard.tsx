@@ -9,6 +9,7 @@ import { ApplicantDashboardProfile } from "@/components/applicant/ApplicantDashb
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApplicantDashboardFeedback } from "@/components/applicant/ApplicantDashboardFeedback";
 import { ApplicantDashboardLinkedInImport } from "@/components/applicant/ApplicantDashboardLinkedInImport";
+import { ApplicantDashboardInterviews } from "@/components/applicant/ApplicantDashboardInterviews";
 
 const ApplicantDashboard = () => {
   const [activeTab, setActiveTab] = useState("applications");
@@ -29,6 +30,7 @@ const ApplicantDashboard = () => {
             <Tabs defaultValue="applications" onValueChange={setActiveTab}>
               <TabsList className="mb-8 flex flex-wrap">
                 <TabsTrigger value="applications">My Applications</TabsTrigger>
+                <TabsTrigger value="interviews">Interviews</TabsTrigger>
                 <TabsTrigger value="cv-generator">CV Generator</TabsTrigger>
                 <TabsTrigger value="linkedin-import">LinkedIn Import</TabsTrigger>
                 <TabsTrigger value="feedback">Feedback</TabsTrigger>
@@ -36,6 +38,9 @@ const ApplicantDashboard = () => {
               </TabsList>
               <TabsContent value="applications" className="animate-fade-in">
                 <ApplicantDashboardApplications />
+              </TabsContent>
+              <TabsContent value="interviews" className="animate-fade-in">
+                <ApplicantDashboardInterviews />
               </TabsContent>
               <TabsContent value="cv-generator" className="animate-fade-in">
                 <ApplicantDashboardCVGenerator />
