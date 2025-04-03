@@ -81,15 +81,15 @@ export const ApplicantProfileDialog = ({
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{applicant.location || "Not specified"}</span>
+                  <span>Not specified</span>
                 </div>
                 <div className="flex items-center">
                   <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{applicant.currentJob || "Not specified"}</span>
+                  <span>{applicant.jobTitle}</span>
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>Applied {new Date().toLocaleDateString()}</span>
+                  <span>Applied {new Date(applicant.appliedDate).toLocaleDateString()}</span>
                 </div>
               </div>
 
@@ -107,7 +107,7 @@ export const ApplicantProfileDialog = ({
               <div>
                 <h4 className="font-medium text-gray-500 mb-2">Education</h4>
                 <p>
-                  {applicant.education || "Bachelor's Degree in Computer Science from University of Technology"}
+                  {applicant.education || "Not specified"}
                 </p>
               </div>
             </div>
