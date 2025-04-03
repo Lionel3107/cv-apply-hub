@@ -213,7 +213,7 @@ export const CompanyDashboardSchedule = () => {
               mode="single"
               selected={date}
               onSelect={handleDateChange}
-              className="rounded-md border w-full"
+              className="rounded-md border w-full pointer-events-auto"
             />
             
             <div className="mt-6 space-y-2">

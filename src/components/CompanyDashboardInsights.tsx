@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const CompanyDashboardInsights = () => {
   // Mock data for visualizations
@@ -119,6 +119,12 @@ export const CompanyDashboardInsights = () => {
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center"
+                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
