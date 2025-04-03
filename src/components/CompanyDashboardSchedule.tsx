@@ -3,13 +3,15 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar as CalendarIcon, Clock, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Trash2, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ScheduledEvent {
   id: string;
@@ -91,6 +93,11 @@ export const CompanyDashboardSchedule = () => {
     },
   ]);
 
+  // Calendar direct add modal states
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(undefined);
+  const [addType, setAddType] = useState<"event" | "task">("event");
+  
   const [newEvent, setNewEvent] = useState("");
   const [newEventDate, setNewEventDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState("");
@@ -186,11 +193,58 @@ export const CompanyDashboardSchedule = () => {
     }
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setDate(date);
-      setSelectedDate(format(date, "yyyy-MM-dd"));
+  // Function to handle calendar date selection
+  const handleCalendarSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      // Open dialog for adding event or task directly
+      setSelectedCalendarDate(selectedDate);
+      setCalendarDialogOpen(true);
+      
+      // Set the selected date for the new event/task
+      setDate(selectedDate);
+      setSelectedDate(format(selectedDate, "yyyy-MM-dd"));
     }
+  };
+
+  // Function to handle adding event/task from calendar dialog
+  const handleAddFromCalendar = () => {
+    if (addType === "event") {
+      if (newEvent.trim() === "") return;
+      
+      const event: ScheduledEvent = {
+        id: Date.now().toString(),
+        title: newEvent,
+        date: format(selectedCalendarDate!, "yyyy-MM-dd"),
+        time: newTime || "09:00",
+        type: newType,
+      };
+      
+      setEvents([...events, event]);
+      setNewEvent("");
+    } else {
+      if (newTask.trim() === "") return;
+      
+      const task: Task = {
+        id: Date.now().toString(),
+        title: newTask,
+        dueDate: format(selectedCalendarDate!, "yyyy-MM-dd"),
+        status: "pending",
+        priority: newPriority,
+      };
+      
+      setTasks([...tasks, task]);
+      setNewTask("");
+    }
+    
+    setCalendarDialogOpen(false);
+  };
+
+  // Function to check if date has events or tasks
+  const dateHasItems = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    const hasEvents = events.some(event => event.date === dateStr);
+    const hasTasks = tasks.some(task => task.dueDate === dateStr);
+    return hasEvents || hasTasks;
   };
 
   // Get events and tasks for the selected date
@@ -212,8 +266,18 @@ export const CompanyDashboardSchedule = () => {
             <Calendar
               mode="single"
               selected={date}
-              onSelect={handleDateChange}
+              onSelect={handleCalendarSelect}
               className="rounded-md border w-full pointer-events-auto"
+              modifiers={{
+                hasItems: (date) => dateHasItems(date),
+              }}
+              modifiersStyles={{
+                hasItems: { 
+                  fontWeight: 'bold', 
+                  textDecoration: 'underline',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                }
+              }}
             />
             
             <div className="mt-6 space-y-2">
@@ -224,6 +288,7 @@ export const CompanyDashboardSchedule = () => {
                 <Badge className="bg-red-100 text-red-800">Deadline</Badge>
                 <Badge className="bg-green-100 text-green-800">Task</Badge>
               </div>
+              <p className="text-xs text-gray-500 mt-2">Click on any date to add an event or task directly</p>
             </div>
           </CardContent>
         </Card>
@@ -552,6 +617,99 @@ export const CompanyDashboardSchedule = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Dialog for adding event/task directly from calendar */}
+      <Dialog open={calendarDialogOpen} onOpenChange={setCalendarDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              Add to {selectedCalendarDate ? format(selectedCalendarDate, "MMMM d, yyyy") : "Calendar"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex gap-2 mb-4">
+            <Button 
+              variant={addType === "event" ? "default" : "outline"} 
+              onClick={() => setAddType("event")}
+              className={addType === "event" ? "bg-brand-blue hover:bg-brand-darkBlue" : ""}
+            >
+              Event
+            </Button>
+            <Button 
+              variant={addType === "task" ? "default" : "outline"} 
+              onClick={() => setAddType("task")}
+              className={addType === "task" ? "bg-brand-blue hover:bg-brand-darkBlue" : ""}
+            >
+              Task
+            </Button>
+          </div>
+          
+          {addType === "event" ? (
+            <div className="space-y-4">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Event title"
+                  value={newEvent}
+                  onChange={(e) => setNewEvent(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    type="time"
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex-1">
+                  <select
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value as "interview" | "meeting" | "deadline" | "other")}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="interview">Interview</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="deadline">Deadline</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Task title"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <select
+                  value={newPriority}
+                  onChange={(e) => setNewPriority(e.target.value as "low" | "medium" | "high")}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="low">Low Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="high">High Priority</option>
+                </select>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCalendarDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddFromCalendar} className="bg-brand-blue hover:bg-brand-darkBlue">
+              Add {addType === "event" ? "Event" : "Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -10,7 +10,8 @@ import {
   Clock,
   ListFilter,
   UserCheck,
-  Trash2
+  Trash2,
+  MessageSquare
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,6 +27,7 @@ interface ApplicantActionsProps {
   onEditApplicant: (applicant: Applicant) => void;
   onDeleteApplicant: (applicant: Applicant) => void;
   onChangeAction: (applicant: Applicant, action: Applicant["action"]) => void;
+  onMessageApplicant?: (applicant: Applicant) => void;
 }
 
 export const ApplicantActions = ({
@@ -34,7 +36,8 @@ export const ApplicantActions = ({
   onViewCoverLetter,
   onEditApplicant,
   onDeleteApplicant,
-  onChangeAction
+  onChangeAction,
+  onMessageApplicant
 }: ApplicantActionsProps) => {
   return (
     <div className="flex justify-end gap-1">
@@ -49,6 +52,16 @@ export const ApplicantActions = ({
       >
         <FileText className="h-4 w-4" />
       </Button>
+      {onMessageApplicant && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => onMessageApplicant(applicant)}
+          className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+        >
+          <MessageSquare className="h-4 w-4" />
+        </Button>
+      )}
       <Button variant="outline" size="sm">
         <Download className="h-4 w-4" />
       </Button>

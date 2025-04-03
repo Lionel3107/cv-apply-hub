@@ -30,7 +30,7 @@ const ApplicantDashboard = () => {
             <Tabs defaultValue="applications" onValueChange={setActiveTab}>
               <TabsList className="mb-8 flex flex-wrap">
                 <TabsTrigger value="applications">My Applications</TabsTrigger>
-                <TabsTrigger value="interviews">Interviews</TabsTrigger>
+                <TabsTrigger value="interviews">Interviews & Recommendations</TabsTrigger>
                 <TabsTrigger value="cv-generator">CV Generator</TabsTrigger>
                 <TabsTrigger value="linkedin-import">LinkedIn Import</TabsTrigger>
                 <TabsTrigger value="feedback">Feedback</TabsTrigger>

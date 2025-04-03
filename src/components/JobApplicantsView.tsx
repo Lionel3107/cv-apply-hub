@@ -18,10 +18,27 @@ import { Applicant } from "@/types/applicant";
 import { Job } from "@/types/job";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { toast } from "sonner";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface JobApplicantsViewProps {
   job: Job;
   onBack: () => void;
+}
+
+interface ApplicantMessage {
+  id: string;
+  applicantId: string;
+  message: string;
+  date: string;
+  status: "sent" | "read";
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
@@ -31,6 +48,18 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [jobApplicants, setJobApplicants] = useState<Applicant[]>(
     mockApplicants.slice(0, Math.floor(Math.random() * 5) + 1)
+  );
+
+  // Message feature states
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [applicantMessages, setApplicantMessages] = useState<ApplicantMessage[]>([]);
+  
+  // Interview tab state
+  const [activeTab, setActiveTab] = useState("applicants");
+  // Get interviewed applicants
+  const interviewedApplicants = jobApplicants.filter(
+    applicant => applicant.action === "interviewed" || applicant.action === "shortlisted"
   );
 
   const handleDeleteClick = (applicant: Applicant) => {
@@ -77,6 +106,35 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     };
     
     toast.success(`Applicant ${applicant.name} ${actionMessages[action]}`);
+  };
+  
+  // Handle messaging applicant
+  const handleMessageApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setMessageDialogOpen(true);
+  };
+  
+  const handleSendMessage = () => {
+    if (!selectedApplicant || newMessage.trim() === "") return;
+    
+    const message: ApplicantMessage = {
+      id: Date.now().toString(),
+      applicantId: selectedApplicant.id,
+      message: newMessage,
+      date: new Date().toISOString(),
+      status: "sent"
+    };
+    
+    setApplicantMessages([...applicantMessages, message]);
+    setNewMessage("");
+    setMessageDialogOpen(false);
+    
+    toast.success(`Message sent to ${selectedApplicant.name}`);
+  };
+  
+  // Handle scheduling interview
+  const handleScheduleInterview = (applicant: Applicant) => {
+    toast.success(`Interview scheduled with ${applicant.name}`);
   };
 
   return (
@@ -160,40 +218,111 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         </CardContent>
       </Card>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Applicant</TableHead>
-              <TableHead>Job Title</TableHead>
-              <TableHead>Skills & Qualifications</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {jobApplicants.length > 0 ? (
-              jobApplicants.map((applicant) => (
-                <ApplicantRow
-                  key={applicant.id}
-                  applicant={applicant}
-                  onViewApplicant={handleViewApplicant}
-                  onViewCoverLetter={handleViewCoverLetter}
-                  onEditApplicant={handleEditApplicant}
-                  onDeleteApplicant={handleDeleteClick}
-                  onChangeAction={handleChangeAction}
-                />
-              ))
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="applicants">All Applicants</TabsTrigger>
+          <TabsTrigger value="interviews">Interviews</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="applicants" className="mt-4">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Applicant</TableHead>
+                  <TableHead>Job Title</TableHead>
+                  <TableHead>Skills & Qualifications</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {jobApplicants.length > 0 ? (
+                  jobApplicants.map((applicant) => (
+                    <ApplicantRow
+                      key={applicant.id}
+                      applicant={applicant}
+                      onViewApplicant={handleViewApplicant}
+                      onViewCoverLetter={handleViewCoverLetter}
+                      onEditApplicant={handleEditApplicant}
+                      onDeleteApplicant={handleDeleteClick}
+                      onChangeAction={handleChangeAction}
+                      onMessageApplicant={handleMessageApplicant}
+                    />
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableHead colSpan={5} className="text-center py-8">
+                      No applicants yet for this job
+                    </TableHead>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="interviews" className="mt-4">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {interviewedApplicants.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {interviewedApplicants.map((applicant) => (
+                  <Card key={applicant.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{applicant.name}</CardTitle>
+                      <p className="text-sm text-gray-500">{applicant.email}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm font-medium">Experience: {applicant.experience}</p>
+                        <p className="text-sm font-medium">Education: {applicant.education}</p>
+                        
+                        <div className="flex flex-wrap gap-1 mt-1 mb-3">
+                          {applicant.skills.slice(0, 3).map((skill, index) => (
+                            <Button key={index} variant="outline" size="sm" className="px-2 py-0 h-6 text-xs">
+                              {skill}
+                            </Button>
+                          ))}
+                          {applicant.skills.length > 3 && (
+                            <Button variant="outline" size="sm" className="px-2 py-0 h-6 text-xs">
+                              +{applicant.skills.length - 3}
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="flex justify-between items-center mt-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-brand-blue border-brand-blue hover:bg-brand-blue/10"
+                            onClick={() => handleScheduleInterview(applicant)}
+                          >
+                            Schedule Interview
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleMessageApplicant(applicant)}
+                          >
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             ) : (
-              <TableRow>
-                <TableHead colSpan={5} className="text-center py-8">
-                  No applicants yet for this job
-                </TableHead>
-              </TableRow>
+              <div className="text-center py-12">
+                <p className="text-gray-500">No candidates selected for interviews yet</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Shortlist or interview applicants to see them here
+                </p>
+              </div>
             )}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <CoverLetterDialog
         open={coverLetterDialogOpen}
@@ -213,6 +342,36 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         onOpenChange={setProfileDialogOpen}
         applicant={selectedApplicant}
       />
+      
+      {/* Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              Send Message to {selectedApplicant?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <p className="text-sm text-gray-500 mb-2">
+              This message will be sent to the applicant's email address.
+            </p>
+            <Textarea 
+              placeholder="Write your message here..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="min-h-[150px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendMessage} className="bg-brand-blue hover:bg-brand-darkBlue">
+              Send Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
