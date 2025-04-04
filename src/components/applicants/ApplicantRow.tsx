@@ -11,6 +11,7 @@ interface ApplicantRowProps {
   onEditApplicant: (applicant: Applicant) => void;
   onDeleteApplicant: (applicant: Applicant) => void;
   onChangeAction: (applicant: Applicant, action: Applicant["action"]) => void;
+  onMessageApplicant?: (applicant: Applicant) => void;
 }
 
 export const ApplicantRow = ({
@@ -19,7 +20,8 @@ export const ApplicantRow = ({
   onViewCoverLetter,
   onEditApplicant,
   onDeleteApplicant,
-  onChangeAction
+  onChangeAction,
+  onMessageApplicant
 }: ApplicantRowProps) => {
   const getActionBadge = (action: Applicant["action"]) => {
     switch (action) {
@@ -72,6 +74,7 @@ export const ApplicantRow = ({
           onEditApplicant={onEditApplicant}
           onDeleteApplicant={onDeleteApplicant}
           onChangeAction={onChangeAction}
+          onMessageApplicant={onMessageApplicant}
         />
       </TableCell>
     </TableRow>
