@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Applicant, ApplicantApplication } from "@/types/applicant";
+import { Applicant, ApplicantApplication, ApplicationStatus } from "@/types/applicant";
 import { toast } from "sonner";
 
 export const useApplications = (jobId?: string) => {
@@ -84,7 +84,7 @@ export const useApplications = (jobId?: string) => {
           jobTitle: app.jobs?.title || "Unknown Position",
           appliedDate: app.applied_date,
           resumeUrl: app.resume_url || "",
-          action: app.status,
+          action: validateApplicationStatus(app.status),
           skills: app.skills || [],
           experience: app.experience || "",
           education: app.education || "",
@@ -178,10 +178,10 @@ export const useUserApplications = () => {
           companyName: app.jobs?.companies?.name || "Unknown Company",
           companyLogo: app.jobs?.companies?.logo_url,
           appliedDate: app.applied_date,
-          status: app.status,
+          status: validateApplicationStatus(app.status),
           statusUpdates: [
             {
-              status: app.status,
+              status: validateApplicationStatus(app.status),
               date: app.applied_date,
             },
           ],
@@ -225,3 +225,15 @@ export const useUserApplications = () => {
 
   return { applications, isLoading, error };
 };
+
+// Helper function to validate and type-cast application status
+function validateApplicationStatus(status: string | null): ApplicationStatus {
+  const validStatuses: ApplicationStatus[] = ["new", "shortlisted", "interviewed", "rejected", "hired"];
+  
+  // If the status is null or not a valid status, default to "new"
+  if (!status || !validStatuses.includes(status as ApplicationStatus)) {
+    return "new";
+  }
+  
+  return status as ApplicationStatus;
+}
