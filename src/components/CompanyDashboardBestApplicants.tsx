@@ -15,52 +15,23 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Star, Download, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useJobs } from "@/hooks/use-jobs";
-import { useApplications } from "@/hooks/use-applications";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/AuthContext";
 import { ApplicantWithScore } from "@/types/applicant";
+import { useBestApplicants } from "@/hooks/use-best-applicants";
 
 export const CompanyDashboardBestApplicants = () => {
-  const { profile } = useAuth();
-  const { jobs, isLoading: jobsLoading } = useJobs(profile?.company_id);
-  const { applications, isLoading: applicationsLoading } = useApplications();
+  const { applicantsByJob, isLoading, error } = useBestApplicants();
   
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("scoreDesc");
   const [limitCount, setLimitCount] = useState<number | null>(null);
   
-  // Group applications by job
-  const applicantsByJob = React.useMemo(() => {
-    if (jobsLoading || applicationsLoading || !jobs.length) return [];
-    
-    const groupedApplicants = [];
-    
-    for (const job of jobs) {
-      const jobApplicants = applications
-        .filter(app => app.jobTitle === job.title)
-        .map(app => ({
-          ...app,
-          score: Math.floor(Math.random() * 60) + 40, // Mock score between 40-100
-          avatar: null // No real avatars yet
-        }));
-      
-      if (jobApplicants.length > 0) {
-        groupedApplicants.push({
-          jobId: job.id,
-          jobTitle: job.title,
-          applicants: jobApplicants
-        });
-      }
-    }
-    
+  React.useEffect(() => {
     // If this is the first render and we have jobs, expand the first one
-    if (groupedApplicants.length > 0 && expandedJob === null) {
-      setExpandedJob(groupedApplicants[0].jobId);
+    if (applicantsByJob.length > 0 && expandedJob === null) {
+      setExpandedJob(applicantsByJob[0].jobId);
     }
-    
-    return groupedApplicants;
-  }, [jobs, applications, jobsLoading, applicationsLoading, expandedJob]);
+  }, [applicantsByJob, expandedJob]);
   
   const handleToggleJob = (jobId: string) => {
     setExpandedJob(expandedJob === jobId ? null : jobId);
@@ -131,10 +102,14 @@ export const CompanyDashboardBestApplicants = () => {
   };
   
   const handleDownloadCV = (applicant) => {
-    toast.success(`Resume for ${applicant.name} downloaded`);
+    if (applicant.resumeUrl) {
+      window.open(applicant.resumeUrl, '_blank');
+    } else {
+      toast.info(`No resume uploaded for ${applicant.name}`);
+    }
   };
   
-  if (jobsLoading || applicationsLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
@@ -156,6 +131,23 @@ export const CompanyDashboardBestApplicants = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold">Best Applicants by Job</h2>
+        </div>
+        <Card>
+          <CardContent className="text-center py-12">
+            <h3 className="text-lg font-medium text-red-600 mb-2">Error loading applicants</h3>
+            <p className="text-gray-700 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -235,7 +227,7 @@ export const CompanyDashboardBestApplicants = () => {
                               </Avatar>
                               <div>
                                 <div className="font-medium">{applicant.name}</div>
-                                <div className="text-sm text-gray-500">{applicant.jobTitle}</div>
+                                <div className="text-sm text-gray-500">{applicant.email}</div>
                               </div>
                             </div>
                           </TableCell>
@@ -258,7 +250,11 @@ export const CompanyDashboardBestApplicants = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>{applicant.experience}</TableCell>
+                          <TableCell>
+                            {applicant.experience && applicant.experience.length > 50
+                              ? `${applicant.experience.substring(0, 50)}...`
+                              : applicant.experience || "Not specified"}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button 
