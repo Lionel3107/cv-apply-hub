@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log("Auth state changed:", event);
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", currentSession ? "Session found" : "No session");
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, is_employer, company_id, avatar_url')
@@ -76,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log("Profile data:", data);
       setProfile(data);
     } catch (error) {
       console.error('Error in fetchProfile:', error);

@@ -25,13 +25,18 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
   // If a role is required, check the user's role
   if (requiredRole) {
+    console.log("Required role:", requiredRole);
+    console.log("User profile:", profile);
+    
     // If employer is required but user is not an employer
     if (requiredRole === "employer" && !profile?.is_employer) {
+      console.log("User is not an employer, redirecting to applicant dashboard");
       return <Navigate to="/applicant-dashboard" replace />;
     }
     
     // If applicant is required but user is an employer
     if (requiredRole === "applicant" && profile?.is_employer) {
+      console.log("User is an employer, redirecting to employer dashboard");
       return <Navigate to="/dashboard" replace />;
     }
   }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -152,18 +151,26 @@ const Auth = () => {
 
       // Check if the user is an employer to determine which dashboard to redirect to
       if (authData.user) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('is_employer')
           .eq('id', authData.user.id)
           .single();
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
+        }
           
         toast({
           title: "Signed in successfully!",
           description: "Welcome back!",
         });
         
-        redirectToDashboard(profileData?.is_employer || false);
+        // Make sure we're correctly checking the is_employer flag
+        const isEmployer = profileData?.is_employer || false;
+        console.log("User is employer:", isEmployer);
+        redirectToDashboard(isEmployer);
       }
       
     } catch (error: any) {
@@ -178,6 +185,7 @@ const Auth = () => {
   };
 
   const redirectToDashboard = (isEmployer: boolean) => {
+    console.log("Redirecting user. Is employer:", isEmployer);
     if (isEmployer) {
       navigate("/dashboard");
     } else {
