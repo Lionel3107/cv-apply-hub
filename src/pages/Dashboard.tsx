@@ -10,8 +10,13 @@ import { CompanyDashboardBestApplicants } from "@/components/CompanyDashboardBes
 import { JobApplicantsView } from "@/components/JobApplicantsView";
 import { Job } from "@/types/job";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
+import { useJobs } from "@/hooks/use-jobs";
+import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
+  const { profile } = useAuth();
+  const { jobs, isLoading } = useJobs(profile?.company_id);
   const [activeTab, setActiveTab] = useState("jobs");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
@@ -22,6 +27,21 @@ const Dashboard = () => {
   const handleBackToJobs = () => {
     setSelectedJob(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-brand-blue mx-auto mb-4" />
+            <p className="text-gray-600">Loading dashboard data...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

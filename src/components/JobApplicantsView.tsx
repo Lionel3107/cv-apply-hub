@@ -13,7 +13,6 @@ import { ApplicantRow } from "./applicants/ApplicantRow";
 import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
 import { DeleteApplicantDialog } from "./applicants/DeleteApplicantDialog";
 import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
-import { mockApplicants } from "@/data/mockApplicants";
 import { Applicant } from "@/types/applicant";
 import { Job } from "@/types/job";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -27,6 +26,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useApplications } from "@/hooks/use-applications";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JobApplicantsViewProps {
   job: Job;
@@ -42,13 +44,12 @@ interface ApplicantMessage {
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
+  const { applications, isLoading, error } = useApplications(job.id);
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [coverLetterDialogOpen, setCoverLetterDialogOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
-  const [jobApplicants, setJobApplicants] = useState<Applicant[]>(
-    mockApplicants.slice(0, Math.floor(Math.random() * 5) + 1)
-  );
 
   // Message feature states
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
@@ -57,8 +58,9 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   
   // Interview tab state
   const [activeTab, setActiveTab] = useState("applicants");
+  
   // Get interviewed applicants
-  const interviewedApplicants = jobApplicants.filter(
+  const interviewedApplicants = applications.filter(
     applicant => applicant.action === "interviewed" || applicant.action === "shortlisted"
   );
 
@@ -67,12 +69,24 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedApplicant) {
-      setJobApplicants(jobApplicants.filter(app => app.id !== selectedApplicant.id));
-      toast.success(`Applicant ${selectedApplicant.name} removed successfully`);
-      setDeleteDialogOpen(false);
-      setSelectedApplicant(null);
+      try {
+        const { error } = await supabase
+          .from("applications")
+          .delete()
+          .eq("id", selectedApplicant.id);
+          
+        if (error) throw error;
+        
+        toast.success(`Applicant ${selectedApplicant.name} removed successfully`);
+      } catch (error) {
+        console.error("Error removing applicant:", error);
+        toast.error("Failed to remove applicant");
+      } finally {
+        setDeleteDialogOpen(false);
+        setSelectedApplicant(null);
+      }
     }
   };
 
@@ -91,21 +105,28 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     setProfileDialogOpen(true);
   };
   
-  const handleChangeAction = (applicant: Applicant, action: Applicant["action"]) => {
-    const updatedApplicants = jobApplicants.map(app => 
-      app.id === applicant.id ? { ...app, action } : app
-    );
-    setJobApplicants(updatedApplicants);
-    
-    const actionMessages = {
-      new: "marked as new",
-      shortlisted: "shortlisted",
-      interviewed: "marked as interviewed",
-      rejected: "rejected",
-      hired: "hired"
-    };
-    
-    toast.success(`Applicant ${applicant.name} ${actionMessages[action]}`);
+  const handleChangeAction = async (applicant: Applicant, action: Applicant["action"]) => {
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ status: action })
+        .eq("id", applicant.id);
+        
+      if (error) throw error;
+      
+      const actionMessages = {
+        new: "marked as new",
+        shortlisted: "shortlisted",
+        interviewed: "marked as interviewed",
+        rejected: "rejected",
+        hired: "hired"
+      };
+      
+      toast.success(`Applicant ${applicant.name} ${actionMessages[action]}`);
+    } catch (error) {
+      console.error("Error updating applicant status:", error);
+      toast.error("Failed to update applicant status");
+    }
   };
   
   // Handle messaging applicant
@@ -114,28 +135,78 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     setMessageDialogOpen(true);
   };
   
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!selectedApplicant || newMessage.trim() === "") return;
     
-    const message: ApplicantMessage = {
-      id: Date.now().toString(),
-      applicantId: selectedApplicant.id,
-      message: newMessage,
-      date: new Date().toISOString(),
-      status: "sent"
-    };
-    
-    setApplicantMessages([...applicantMessages, message]);
-    setNewMessage("");
-    setMessageDialogOpen(false);
-    
-    toast.success(`Message sent to ${selectedApplicant.name}`);
+    try {
+      // In a real app, this would save the message to the database
+      const message: ApplicantMessage = {
+        id: Date.now().toString(),
+        applicantId: selectedApplicant.id,
+        message: newMessage,
+        date: new Date().toISOString(),
+        status: "sent"
+      };
+      
+      setApplicantMessages([...applicantMessages, message]);
+      setNewMessage("");
+      setMessageDialogOpen(false);
+      
+      toast.success(`Message sent to ${selectedApplicant.name}`);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
   };
   
   // Handle scheduling interview
   const handleScheduleInterview = (applicant: Applicant) => {
     toast.success(`Interview scheduled with ${applicant.name}`);
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back to Job Listings
+        </Button>
+        
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xl">{job.title} - Applicants</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="animate-pulse">
+          <Skeleton className="h-10 w-60 mb-4" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back to Job Listings
+        </Button>
+        
+        <div className="py-10 text-center">
+          <p className="text-red-500 mb-2">Error loading applicants: {error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -237,8 +308,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {jobApplicants.length > 0 ? (
-                  jobApplicants.map((applicant) => (
+                {applications.length > 0 ? (
+                  applications.map((applicant) => (
                     <ApplicantRow
                       key={applicant.id}
                       applicant={applicant}

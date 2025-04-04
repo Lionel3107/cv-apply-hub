@@ -10,9 +10,27 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApplicantDashboardFeedback } from "@/components/applicant/ApplicantDashboardFeedback";
 import { ApplicantDashboardLinkedInImport } from "@/components/applicant/ApplicantDashboardLinkedInImport";
 import { ApplicantDashboardInterviews } from "@/components/applicant/ApplicantDashboardInterviews";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 const ApplicantDashboard = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("applications");
+  
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-brand-blue mx-auto mb-4" />
+            <p className="text-gray-600">Loading your dashboard...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

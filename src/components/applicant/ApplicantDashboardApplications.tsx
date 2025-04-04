@@ -12,14 +12,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, FileText, MessageCircle } from "lucide-react";
-import { mockApplicantApplications } from "@/data/mockApplicantApplications";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ApplicationDetailsDialog } from "./ApplicationDetailsDialog";
 import { ApplicationStatus } from "@/types/applicant";
+import { useUserApplications } from "@/hooks/use-applications";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const ApplicantDashboardApplications = () => {
-  const [applications, setApplications] = useState(mockApplicantApplications);
+  const { applications, isLoading, error } = useUserApplications();
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -48,6 +49,42 @@ export const ApplicantDashboardApplications = () => {
   const handleContactEmployer = (application) => {
     toast.info(`Contact functionality will be implemented soon for ${application.companyName}`);
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Job Applications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <div className="animate-pulse">
+              <Skeleton className="h-8 w-full mb-4" />
+              <Skeleton className="h-16 w-full mb-2" />
+              <Skeleton className="h-16 w-full mb-2" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Job Applications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6">
+            <p className="text-red-500 mb-4">Error loading applications: {error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
