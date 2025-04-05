@@ -15,11 +15,13 @@ import { ChevronLeft, Search, Filter, Download, Calendar } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
 import { Applicant } from "@/types/applicant";
-import ApplicantRow from "./applicants/ApplicantRow";
+import { ApplicantRow } from "./applicants/ApplicantRow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
 import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
 import { DeleteApplicantDialog } from "./applicants/DeleteApplicantDialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JobApplicantsViewProps {
   job: Job;
@@ -68,6 +70,47 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const handleDeleteClick = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedApplicant) return;
+    
+    try {
+      // Delete the application from the database
+      const { error: deleteError } = await supabase
+        .from("applications")
+        .delete()
+        .eq("id", selectedApplicant.id);
+        
+      if (deleteError) throw deleteError;
+      
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
+      
+      // Show success message
+      toast.success(`Application from ${selectedApplicant.name} has been deleted`);
+    } catch (err: any) {
+      console.error("Error deleting application:", err);
+      toast.error("Failed to delete application");
+    }
+  };
+
+  const handleChangeAction = async (applicant: Applicant, newAction: Applicant["action"]) => {
+    try {
+      // Update the application status in the database
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({ status: newAction })
+        .eq("id", applicant.id);
+        
+      if (updateError) throw updateError;
+      
+      // Show success message
+      toast.success(`Application status updated to ${newAction}`);
+    } catch (err: any) {
+      console.error("Error updating application status:", err);
+      toast.error("Failed to update status");
+    }
   };
 
   if (isLoading) {
@@ -177,8 +220,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Applicant</TableHead>
+                    <TableHead>Job</TableHead>
                     <TableHead>Skills</TableHead>
-                    <TableHead>Applied Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -188,9 +231,11 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                     <ApplicantRow
                       key={applicant.id}
                       applicant={applicant}
-                      onViewProfile={() => handleViewProfile(applicant)}
-                      onViewCoverLetter={() => handleViewCoverLetter(applicant)}
-                      onDelete={() => handleDeleteClick(applicant)}
+                      onViewApplicant={handleViewProfile}
+                      onViewCoverLetter={handleViewCoverLetter}
+                      onEditApplicant={() => {}}
+                      onDeleteApplicant={handleDeleteClick}
+                      onChangeAction={handleChangeAction}
                     />
                   ))}
                 </TableBody>
@@ -216,6 +261,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             applicant={selectedApplicant}
             open={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
+            onConfirm={handleDeleteConfirm}
           />
         </>
       )}
