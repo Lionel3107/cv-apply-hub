@@ -12,6 +12,9 @@ export const useCompanyJobs = (companyId?: string) => {
     logo?: string;
     description?: string;
     website?: string;
+    location?: string;
+    email?: string;
+    phone?: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +35,7 @@ export const useCompanyJobs = (companyId?: string) => {
         // First, fetch the company details
         const { data: companyData, error: companyError } = await supabase
           .from("companies")
-          .select("id, name, logo_url, description, website")
+          .select("id, name, logo_url, description, website, location, email, phone")
           .eq("id", companyId)
           .single();
 
@@ -46,6 +49,9 @@ export const useCompanyJobs = (companyId?: string) => {
           logo: companyData.logo_url,
           description: companyData.description,
           website: companyData.website,
+          location: companyData.location,
+          email: companyData.email,
+          phone: companyData.phone,
         });
 
         // Then fetch jobs by company using the function with proper typing
