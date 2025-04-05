@@ -21,7 +21,7 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
     setFileError,
     handleInputChange,
     handleSubmit
-  } = useApplicationForm();
+  } = useApplicationForm(job.id);
   
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-8 shadow-sm">

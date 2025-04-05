@@ -96,7 +96,7 @@ export const ApplicantProfileDialog = ({
                 </div>
                 <div className="flex items-center">
                   <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>+1 555-555-5555</span>
+                  <span>{applicant.phone || "Not provided"}</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-gray-400" />
@@ -115,11 +115,15 @@ export const ApplicantProfileDialog = ({
               <div>
                 <h4 className="font-medium text-gray-500 mb-2">Skills</h4>
                 <div className="flex flex-wrap gap-1">
-                  {applicant.skills?.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="bg-gray-100">
-                      {skill}
-                    </Badge>
-                  ))}
+                  {applicant.skills.length > 0 ? (
+                    applicant.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="bg-gray-100">
+                        {skill}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 italic">No skills listed</span>
+                  )}
                 </div>
               </div>
 
@@ -129,6 +133,19 @@ export const ApplicantProfileDialog = ({
                   {applicant.education || "Not specified"}
                 </p>
               </div>
+              
+              {applicant.resumeUrl && (
+                <div>
+                  <h4 className="font-medium text-gray-500 mb-2">Resume</h4>
+                  <Button 
+                    variant="outline" 
+                    className="text-blue-600"
+                    onClick={() => window.open(applicant.resumeUrl, '_blank')}
+                  >
+                    View Resume
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

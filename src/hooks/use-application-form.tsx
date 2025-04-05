@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { validateJobApplicationForm } from "@/utils/formValidation";
 import { Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ApplicationFormData {
   fullName: string;
@@ -12,9 +14,10 @@ interface ApplicationFormData {
   coverLetter: string;
 }
 
-export const useApplicationForm = () => {
+export const useApplicationForm = (jobId?: string) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState<ApplicationFormData>({
     fullName: "",
@@ -32,7 +35,7 @@ export const useApplicationForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
@@ -40,11 +43,84 @@ export const useApplicationForm = () => {
       return;
     }
     
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to submit your application.",
+        variant: "destructive"
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!jobId) {
+      toast({
+        title: "Error",
+        description: "Missing job information. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Application submitted:", { ...formData, resumeFile });
+    try {
+      let resumeUrl = null;
+      
+      // Upload resume file if provided
+      if (resumeFile) {
+        const fileExt = resumeFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `resumes/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('applications')
+          .upload(filePath, resumeFile);
+          
+        if (uploadError) {
+          throw new Error(`Resume upload failed: ${uploadError.message}`);
+        }
+        
+        // Get the public URL for the uploaded file
+        const { data: { publicUrl } } = supabase.storage
+          .from('applications')
+          .getPublicUrl(filePath);
+          
+        resumeUrl = publicUrl;
+      }
+      
+      // Extract skills from the cover letter (simplified version)
+      const skills = formData.coverLetter
+        ? formData.coverLetter
+            .split(/[.,;]/)
+            .filter(part => 
+              part.toLowerCase().includes("skill") || 
+              part.toLowerCase().includes("experience") || 
+              part.toLowerCase().includes("proficient")
+            )
+            .map(part => part.trim())
+            .filter(Boolean)
+        : [];
+      
+      // Submit application to Supabase
+      const { error: applicationError } = await supabase
+        .from('applications')
+        .insert({
+          job_id: jobId,
+          user_id: user.id,
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone || null,
+          resume_url: resumeUrl,
+          cover_letter: formData.coverLetter,
+          status: 'new',
+          applied_date: new Date().toISOString(),
+          skills: skills.length > 0 ? skills : null
+        });
+        
+      if (applicationError) {
+        throw new Error(`Application submission failed: ${applicationError.message}`);
+      }
       
       toast({
         title: "Application Submitted",
@@ -56,9 +132,17 @@ export const useApplicationForm = () => {
         ),
       });
       
-      setIsSubmitting(false);
       navigate("/application-success");
-    }, 1500);
+    } catch (error: any) {
+      console.error("Application submission error:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "There was an error submitting your application. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return {

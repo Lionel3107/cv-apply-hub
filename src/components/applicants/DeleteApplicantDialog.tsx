@@ -1,14 +1,15 @@
 
-import { Applicant } from "@/types/applicant";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Applicant } from "@/types/applicant";
 
 interface DeleteApplicantDialogProps {
   open: boolean;
@@ -17,31 +18,30 @@ interface DeleteApplicantDialogProps {
   onConfirm: () => void;
 }
 
-export const DeleteApplicantDialog = ({ 
-  open, 
-  onOpenChange, 
-  applicant, 
-  onConfirm 
+export const DeleteApplicantDialog = ({
+  open,
+  onOpenChange,
+  applicant,
+  onConfirm,
 }: DeleteApplicantDialogProps) => {
+  if (!applicant) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Confirm Delete</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete {applicant?.name}'s application?
-            This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Application</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete the application from {applicant.name}? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
             Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
