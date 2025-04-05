@@ -28,6 +28,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     console.log("Required role:", requiredRole);
     console.log("User profile:", profile);
     
+    // Workaround for new users who might not have profile data fully loaded
+    if (!profile) {
+      console.log("Profile not loaded yet, allowing access temporarily");
+      return <>{children}</>;
+    }
+    
     // If employer is required but user is not an employer
     if (requiredRole === "employer" && !profile?.is_employer) {
       console.log("User is not an employer, redirecting to applicant dashboard");
