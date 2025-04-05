@@ -48,20 +48,39 @@ export const useCompanyJobs = (companyId?: string) => {
           website: companyData.website,
         });
 
-        // Then fetch jobs by company using the function
+        // Then fetch jobs by company using the function with proper typing
         const { data: jobsData, error: jobsError } = await supabase
-          .rpc('get_company_jobs', { company_id_param: companyId });
+          .rpc('get_company_jobs', { company_id_param: companyId }) as {
+            data: Array<{
+              id: string;
+              title: string;
+              company_name: string;
+              company_logo: string | null;
+              location: string;
+              type: string;
+              category: string;
+              tags: string[];
+              description: string;
+              requirements: string[];
+              benefits: string[];
+              salary: string | null;
+              posted_date: string;
+              featured: boolean;
+              is_remote: boolean;
+            }> | null;
+            error: any;
+          };
 
         if (jobsError) {
           throw jobsError;
         }
 
-        // Transform the data to match our Job type
-        const transformedJobs = jobsData.map((job) => ({
+        // Transform the data to match our Job type, handling null case
+        const transformedJobs = jobsData ? jobsData.map((job) => ({
           id: job.id,
           title: job.title,
           company: job.company_name,
-          companyLogo: job.company_logo,
+          companyLogo: job.company_logo || undefined,
           location: job.location,
           type: job.type,
           category: job.category,
@@ -69,11 +88,11 @@ export const useCompanyJobs = (companyId?: string) => {
           description: job.description,
           requirements: job.requirements,
           benefits: job.benefits,
-          salary: job.salary,
+          salary: job.salary || undefined,
           postedDate: job.posted_date,
           featured: job.featured,
           isRemote: job.is_remote,
-        }));
+        })) : [];
 
         setJobs(transformedJobs);
       } catch (err: any) {

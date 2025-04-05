@@ -19,18 +19,22 @@ export const useCategories = () => {
         setIsLoading(true);
         setError(null);
 
+        // Using the correct type for the RPC function
         const { data, error: fetchError } = await supabase
-          .rpc('get_job_count_by_category');
+          .rpc('get_job_count_by_category') as { 
+            data: Array<{ category: string; count: number }> | null; 
+            error: any;
+          };
 
         if (fetchError) {
           throw fetchError;
         }
 
-        // Transform the data to match our Category type
-        const transformedCategories = data.map((category) => ({
+        // Transform the data to match our Category type, handling null case
+        const transformedCategories = data ? data.map((category) => ({
           name: category.category,
           count: Number(category.count),
-        }));
+        })) : [];
 
         setCategories(transformedCategories);
       } catch (err: any) {
