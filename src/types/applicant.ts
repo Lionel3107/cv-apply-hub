@@ -13,6 +13,7 @@ export interface Applicant {
   experience: string;
   education: string;
   coverLetter: string;
+  phone?: string; // Added phone property as optional
 }
 
 export interface ApplicantApplication {
