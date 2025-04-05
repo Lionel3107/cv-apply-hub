@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,7 +89,7 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
   });
 
   // If the user is an employer with a company, pre-fill the company name
-  useState(() => {
+  useEffect(() => {
     const fetchCompanyDetails = async () => {
       if (profile?.company_id) {
         try {
@@ -114,7 +115,7 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
     };
     
     fetchCompanyDetails();
-  }, [profile]);
+  }, [profile, form]);
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
