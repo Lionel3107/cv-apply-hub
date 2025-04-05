@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Users } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, Download, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -16,22 +16,106 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useJobs } from "@/hooks/use-jobs";
 import { useApplications } from "@/hooks/use-applications";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { ScheduleJob } from "./ScheduleJob";
+import { Switch } from "@/components/ui/switch";
 
 export const CompanyDashboardJobs = ({ onSelectJob }) => {
   const { profile } = useAuth();
   const { jobs, isLoading: jobsLoading, error: jobsError } = useJobs(profile?.company_id);
   const { applications } = useApplications();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
+  const [jobToEdit, setJobToEdit] = useState(null);
+  const [jobToSchedule, setJobToSchedule] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    type: '',
+    location: '',
+    salary: '',
+    description: '',
+    is_featured: false,
+    is_remote: false
+  });
 
-  const handleEditJob = (job) => {
-    toast.info(`Editing job: ${job.title}`);
-    // In a real app, this would navigate to an edit form
+  const handleEditClick = (job) => {
+    setJobToEdit(job);
+    setEditForm({
+      title: job.title,
+      type: job.type,
+      location: job.location,
+      salary: job.salary || '',
+      description: job.description,
+      is_featured: job.featured,
+      is_remote: job.isRemote
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleScheduleClick = (job) => {
+    setJobToSchedule(job);
+    setScheduleDialogOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSwitchChange = (checked, name) => {
+    setEditForm(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!jobToEdit) return;
+
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .update({
+          title: editForm.title,
+          type: editForm.type,
+          location: editForm.location,
+          salary: editForm.salary || null,
+          description: editForm.description,
+          is_featured: editForm.is_featured,
+          is_remote: editForm.is_remote
+        })
+        .eq("id", jobToEdit.id);
+
+      if (error) throw error;
+        
+      toast.success(`Job "${editForm.title}" updated successfully`);
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating job:", error);
+      toast.error("Failed to update job");
+    }
   };
 
   const handleDeleteClick = (job) => {
@@ -57,6 +141,38 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         setDeleteDialogOpen(false);
         setJobToDelete(null);
       }
+    }
+  };
+
+  const handleDownloadCV = async (jobId) => {
+    // Find application with matching job
+    const app = applications.find(app => app.jobTitle === jobs.find(j => j.id === jobId)?.title);
+    
+    if (app && app.resumeUrl) {
+      try {
+        // Get the file from Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('resumes')
+          .download(app.resumeUrl.split('/').pop());
+          
+        if (error) throw error;
+        
+        // Create a download link
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${app.name}-resume.pdf`; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success(`Resume downloaded successfully`);
+      } catch (error) {
+        console.error("Error downloading resume:", error);
+        toast.error("Failed to download resume");
+      }
+    } else {
+      toast.error("No resume available for this application");
     }
   };
 
@@ -183,7 +299,7 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                 </div>
               </CardContent>
               
-              <CardFooter className="border-t pt-4 flex justify-between bg-gray-50">
+              <CardFooter className="border-t pt-4 flex flex-wrap gap-2 bg-gray-50">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -194,25 +310,44 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                   View Applicants
                 </Button>
                 
-                <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditClick(job)}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleScheduleClick(job)}
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Schedule
+                </Button>
+                
+                {getApplicantCount(job.id) > 0 && (
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleEditJob(job)}
+                    onClick={() => handleDownloadCV(job.id)}
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
+                    <Download className="h-4 w-4 mr-1" />
+                    Download CV
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                    onClick={() => handleDeleteClick(job)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => handleDeleteClick(job)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -235,6 +370,112 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Job Listing</DialogTitle>
+            <DialogDescription>
+              Make changes to your job listing. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Job Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={editForm.title}
+                  onChange={handleEditChange}
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Job Type</Label>
+                  <Input
+                    id="type"
+                    name="type"
+                    value={editForm.type}
+                    onChange={handleEditChange}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    value={editForm.location}
+                    onChange={handleEditChange}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="salary">Salary (optional)</Label>
+                <Input
+                  id="salary"
+                  name="salary"
+                  value={editForm.salary}
+                  onChange={handleEditChange}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditChange}
+                  className="h-24"
+                  required
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_remote"
+                  checked={editForm.is_remote}
+                  onCheckedChange={(checked) => handleSwitchChange(checked, 'is_remote')}
+                />
+                <Label htmlFor="is_remote">Remote Job</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_featured"
+                  checked={editForm.is_featured}
+                  onCheckedChange={(checked) => handleSwitchChange(checked, 'is_featured')}
+                />
+                <Label htmlFor="is_featured">Feature this job (appears at the top)</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Job Event</DialogTitle>
+            <DialogDescription>
+              Set dates for job-related events like application deadlines or interviews.
+            </DialogDescription>
+          </DialogHeader>
+          {jobToSchedule && <ScheduleJob job={jobToSchedule} onClose={() => setScheduleDialogOpen(false)} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
