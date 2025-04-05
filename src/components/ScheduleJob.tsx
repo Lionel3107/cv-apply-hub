@@ -60,6 +60,9 @@ export function ScheduleJob({ job, onClose }: ScheduleJobProps) {
       if (!isAllDay) {
         const [hours, minutes] = time.split(':').map(Number);
         eventDate.setHours(hours, minutes, 0, 0);
+      } else {
+        // Set time to beginning of day for all-day events
+        eventDate.setHours(0, 0, 0, 0);
       }
       
       // Create end date if not all-day event

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Users, Download, Calendar } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -23,7 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +32,6 @@ import { useApplications } from "@/hooks/use-applications";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ScheduleJob } from "./ScheduleJob";
 import { Switch } from "@/components/ui/switch";
 
 export const CompanyDashboardJobs = ({ onSelectJob }) => {
@@ -42,10 +40,8 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
   const { applications } = useApplications();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
   const [jobToEdit, setJobToEdit] = useState(null);
-  const [jobToSchedule, setJobToSchedule] = useState(null);
   const [editForm, setEditForm] = useState({
     title: '',
     type: '',
@@ -68,11 +64,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
       is_remote: job.isRemote
     });
     setEditDialogOpen(true);
-  };
-
-  const handleScheduleClick = (job) => {
-    setJobToSchedule(job);
-    setScheduleDialogOpen(true);
   };
 
   const handleEditChange = (e) => {
@@ -141,38 +132,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         setDeleteDialogOpen(false);
         setJobToDelete(null);
       }
-    }
-  };
-
-  const handleDownloadCV = async (jobId) => {
-    // Find application with matching job
-    const app = applications.find(app => app.jobTitle === jobs.find(j => j.id === jobId)?.title);
-    
-    if (app && app.resumeUrl) {
-      try {
-        // Get the file from Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('resumes')
-          .download(app.resumeUrl.split('/').pop());
-          
-        if (error) throw error;
-        
-        // Create a download link
-        const url = URL.createObjectURL(data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${app.name}-resume.pdf`; 
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast.success(`Resume downloaded successfully`);
-      } catch (error) {
-        console.error("Error downloading resume:", error);
-        toast.error("Failed to download resume");
-      }
-    } else {
-      toast.error("No resume available for this application");
     }
   };
 
@@ -322,26 +281,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleScheduleClick(job)}
-                >
-                  <Calendar className="h-4 w-4 mr-1" />
-                  Schedule
-                </Button>
-                
-                {getApplicantCount(job.id) > 0 && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDownloadCV(job.id)}
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Download CV
-                  </Button>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
                   className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                   onClick={() => handleDeleteClick(job)}
                 >
@@ -462,18 +401,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
               <Button type="submit">Save Changes</Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Schedule Job Event</DialogTitle>
-            <DialogDescription>
-              Set dates for job-related events like application deadlines or interviews.
-            </DialogDescription>
-          </DialogHeader>
-          {jobToSchedule && <ScheduleJob job={jobToSchedule} onClose={() => setScheduleDialogOpen(false)} />}
         </DialogContent>
       </Dialog>
     </div>

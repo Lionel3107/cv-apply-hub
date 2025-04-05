@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import JobCard from "@/components/JobCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Filter, Download } from "lucide-react";
+import { Search, Loader2, Filter } from "lucide-react";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import { supabase } from "@/integrations/supabase/client";
 import { Job } from "@/types/job";
@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCategories } from "@/hooks/use-categories";
-import { toast } from "sonner";
 
 const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,36 +147,6 @@ const Jobs = () => {
     e.preventDefault();
   };
 
-  const handleExportCSV = () => {
-    // Create CSV content
-    const headers = ['Title', 'Company', 'Location', 'Type', 'Category', 'Posted Date'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredJobs.map(job => 
-        [
-          `"${job.title}"`, 
-          `"${job.company}"`, 
-          `"${job.location}"`, 
-          `"${job.type}"`, 
-          `"${job.category}"`, 
-          `"${new Date(job.postedDate).toLocaleDateString()}"`
-        ].join(',')
-      )
-    ].join('\n');
-
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `jobs-export-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Jobs exported to CSV successfully');
-  };
-
   const uniqueTypes = [...new Set(jobs.map(job => job.type))];
   const uniqueLocations = [...new Set(jobs.map(job => job.location))];
 
@@ -294,15 +263,6 @@ const Jobs = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="h-12 px-4"
-                    onClick={handleExportCSV}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
                 </div>
               </div>
             </div>

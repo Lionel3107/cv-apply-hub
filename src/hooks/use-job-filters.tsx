@@ -6,6 +6,8 @@ type JobFilters = {
   type: string;
   location: string;
   isRemote: boolean | null;
+  status?: string;
+  datePosted?: string;
 };
 
 export const useJobFilters = () => {
@@ -14,6 +16,8 @@ export const useJobFilters = () => {
     type: '',
     location: '',
     isRemote: null,
+    status: '',
+    datePosted: '',
   });
 
   const setFilter = (key: keyof JobFilters, value: any) => {
@@ -29,6 +33,8 @@ export const useJobFilters = () => {
       type: '',
       location: '',
       isRemote: null,
+      status: '',
+      datePosted: '',
     });
   };
 
