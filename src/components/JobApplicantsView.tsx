@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Search, Filter, Download } from "lucide-react";
+import { ChevronLeft, Search, Filter, Download, CalendarIcon } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
 import { Applicant, ApplicationStatus } from "@/types/applicant";
@@ -52,38 +53,35 @@ interface JobApplicantsViewProps {
 
 export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBack }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("all");
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
   const { 
-    applicants, 
+    applications, 
     isLoading, 
-    error, 
-    updateApplicationStatus,
-    deleteApplication 
+    error
   } = useApplications(job.id);
 
   const filteredApplicants = React.useMemo(() => {
-    let filtered = [...(applicants || [])];
+    let filtered = [...(applications || [])];
 
     if (searchTerm) {
       filtered = filtered.filter(applicant =>
-        applicant.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        applicant.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         applicant.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (statusFilter) {
-      filtered = filtered.filter(applicant => applicant.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(applicant => applicant.action === statusFilter);
     }
 
     if (date) {
       filtered = filtered.filter(applicant => {
-        const applicationDate = new Date(applicant.applied_date);
+        const applicationDate = new Date(applicant.appliedDate);
         return (
           applicationDate.getFullYear() === date.getFullYear() &&
           applicationDate.getMonth() === date.getMonth() &&
@@ -93,29 +91,45 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
     }
 
     return filtered;
-  }, [applicants, searchTerm, statusFilter, date]);
+  }, [applications, searchTerm, statusFilter, date]);
 
   const handleStatusChange = async (applicantId: string, newStatus: ApplicationStatus) => {
     try {
-      await updateApplicationStatus(applicantId, newStatus);
-      toast.success("Application status updated successfully.");
-    } catch (error: any) {
-      toast.error(`Failed to update status: ${error.message}`);
+      // Update the application status in the database
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({ status: newStatus })
+        .eq("id", applicantId);
+        
+      if (updateError) throw updateError;
+      
+      // Show success message
+      toast.success(`Application status updated to ${newStatus}`);
+    } catch (err: any) {
+      toast.error(`Failed to update status: ${err.message}`);
     }
   };
 
   const handleDeleteApplicant = async (applicantId: string) => {
     try {
-      await deleteApplication(applicantId);
-      toast.success("Applicant deleted successfully.");
-    } catch (error: any) {
-      toast.error(`Failed to delete applicant: ${error.message}`);
+      // Delete the application from the database
+      const { error: deleteError } = await supabase
+        .from("applications")
+        .delete()
+        .eq("id", applicantId);
+        
+      if (deleteError) throw deleteError;
+      
+      // Show success message
+      toast.success("Applicant deleted successfully");
+    } catch (err: any) {
+      toast.error(`Failed to delete applicant: ${err.message}`);
     }
   };
 
   const handleExport = () => {
-    if (applicants) {
-      exportApplicantsData(applicants, job.title);
+    if (applications) {
+      exportApplicantsData(applications, job.title);
     } else {
       toast.error("No data to export.");
     }
@@ -143,7 +157,8 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
     setSelectAll(!selectAll);
   };
 
-  const allStatuses: ApplicationStatus[] = ["pending", "reviewed", "interviewing", "offered", "hired", "rejected"];
+  // Define valid application statuses
+  const allStatuses: ApplicationStatus[] = ["new", "shortlisted", "interviewed", "rejected", "hired"];
 
   return (
     <div>
@@ -180,12 +195,12 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
                 <PopoverContent className="w-64">
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "")}>
+                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "all")}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="All statuses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All statuses</SelectItem>
+                        <SelectItem value="all">All statuses</SelectItem>
                         {allStatuses.map(status => (
                           <SelectItem key={status} value={status}>{status}</SelectItem>
                         ))}
@@ -202,6 +217,7 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
                             !date && "text-muted-foreground"
                           )}
                         >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
                           {date ? format(date, "PPP") : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
@@ -219,7 +235,7 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
                     </Popover>
 
                     <Button variant="secondary" size="sm" className="w-full" onClick={() => {
-                      setStatusFilter("");
+                      setStatusFilter("all");
                       setDate(undefined);
                       setIsFilterOpen(false);
                     }}>
@@ -274,7 +290,6 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
                     <ApplicantRow
                       key={applicant.id}
                       applicant={applicant}
-                      job={job}
                       isSelected={selectedApplicants.includes(applicant.id)}
                       onSelect={() => toggleApplicantSelection(applicant.id)}
                       onStatusChange={handleStatusChange}
