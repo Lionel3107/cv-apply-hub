@@ -33,7 +33,7 @@ export const CompanyDashboardInsights = () => {
     // Calculate conversion rate (assuming each job has views data)
     // For now, we'll use a placeholder calculation
     const views = totalJobs * 10; // Assuming each job gets about 10 views on average
-    const conversionRate = views > 0 ? ((totalApplications / views) * 100).toFixed(1) : 0;
+    const conversionRate = views > 0 ? Number(((totalApplications / views) * 100).toFixed(1)) : 0;
     
     // Set the stats
     setStats({
