@@ -44,6 +44,15 @@ export const ApplicantRow = ({
     }
   };
 
+  // Create wrapper functions to match expected signatures
+  const handleStatusChange = (applicant: Applicant, action: ApplicationStatus) => {
+    return onStatusChange(applicant.id, action);
+  };
+
+  const handleDeleteApplicant = (applicant: Applicant) => {
+    return onDelete(applicant.id);
+  };
+
   return (
     <TableRow key={applicant.id}>
       <TableCell>
@@ -68,8 +77,8 @@ export const ApplicantRow = ({
           onViewApplicant={onViewApplicant}
           onViewCoverLetter={onViewCoverLetter}
           onEditApplicant={onEditApplicant}
-          onDeleteApplicant={onDelete}
-          onChangeAction={onStatusChange}
+          onDeleteApplicant={handleDeleteApplicant}
+          onChangeAction={handleStatusChange}
           onMessageApplicant={onMessageApplicant}
         />
       </TableCell>

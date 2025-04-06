@@ -19,6 +19,11 @@ export interface Applicant {
   phone?: string;
 }
 
+export interface ApplicantWithScore extends Applicant {
+  score: number;
+  avatar?: string;
+}
+
 export interface ApplicantApplication {
   id: string;
   jobId: string;
