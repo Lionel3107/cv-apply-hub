@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -11,7 +10,6 @@ import {
   LogOut,
   Home,
   Info,
-  Buildings,
   FileText,
   Mail
 } from "lucide-react";
@@ -25,17 +23,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile"; // Corrected import
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export const Header = () => {
   const { user, profile, isLoading } = useAuth();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Close mobile menu when changing viewport size
   useEffect(() => {
     if (!isMobile && mobileMenuOpen) {
       setMobileMenuOpen(false);
@@ -80,13 +78,11 @@ export const Header = () => {
     <header className="sticky top-0 z-40 bg-white border-b">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          {/* Logo section */}
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-blue">
             <Logo className="h-8 w-8" />
             <span className="hidden sm:inline">JobPortal</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
             <Link to="/" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
               Home
@@ -107,7 +103,6 @@ export const Header = () => {
             )}
           </nav>
 
-          {/* Right section - Auth buttons or user menu */}
           <div className="flex items-center space-x-2">
             {isLoading ? (
               <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
@@ -157,7 +152,6 @@ export const Header = () => {
               </Link>
             )}
 
-            {/* Mobile menu toggle */}
             <div className="md:hidden">
               <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
                 {mobileMenuOpen ? (
@@ -170,7 +164,6 @@ export const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="md:hidden pt-4 pb-2 border-t mt-3 space-y-2">
             <Link to="/" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
@@ -182,7 +175,7 @@ export const Header = () => {
               Find Jobs
             </Link>
             <Link to="/companies" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-              <Buildings className="mr-2 h-5 w-5" />
+              <Building className="mr-2 h-5 w-5" />
               Companies
             </Link>
             <Link to="/about" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">

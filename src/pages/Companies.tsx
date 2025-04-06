@@ -1,5 +1,4 @@
-
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building, ExternalLink, Loader2 } from "lucide-react";

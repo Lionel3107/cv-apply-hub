@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import JobApplicationForm from "@/components/JobApplicationForm";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,6 @@ const JobDetails = () => {
           throw new Error("Job not found");
         }
         
-        // Transform the data to match our Job type
         const jobData: Job = {
           id: data.id,
           title: data.title,
@@ -146,9 +144,7 @@ const JobDetails = () => {
       <main className="flex-grow py-8 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Job Details (2/3 width on desktop) */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Job Header */}
               <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-8 shadow-sm">
                 <div className="md:flex justify-between items-start">
                   <div className="flex items-center mb-4 md:mb-0">
@@ -179,7 +175,6 @@ const JobDetails = () => {
                   </div>
                 </div>
                 
-                {/* Job Meta Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="flex items-center text-gray-600">
                     <MapPin size={18} className="mr-2" />
@@ -211,7 +206,6 @@ const JobDetails = () => {
                   )}
                 </div>
                 
-                {/* Tags */}
                 <div className="mt-6 flex flex-wrap gap-2">
                   {job.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="bg-gray-100">
@@ -220,7 +214,6 @@ const JobDetails = () => {
                   ))}
                 </div>
                 
-                {/* Apply Button (mobile only) */}
                 <div className="mt-6 lg:hidden">
                   <Button 
                     className="w-full bg-brand-blue hover:bg-brand-darkBlue"
@@ -236,7 +229,6 @@ const JobDetails = () => {
                 </div>
               </div>
               
-              {/* Job Description */}
               <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-8 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Job Description</h2>
                 <div className="prose max-w-none">
@@ -244,7 +236,6 @@ const JobDetails = () => {
                 </div>
               </div>
               
-              {/* Requirements */}
               <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-8 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Requirements</h2>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
@@ -254,7 +245,6 @@ const JobDetails = () => {
                 </ul>
               </div>
               
-              {/* Benefits */}
               <div className="bg-white rounded-lg border border-gray-200 p-6 md:p-8 shadow-sm">
                 <h2 className="text-xl font-semibold mb-4">Benefits</h2>
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
@@ -265,12 +255,10 @@ const JobDetails = () => {
               </div>
             </div>
             
-            {/* Application Form (1/3 width on desktop) */}
             <div className="lg:col-span-1" id="application-form">
               <div className="sticky top-24">
                 <JobApplicationForm job={job} />
                 
-                {/* Company Card */}
                 {job.companyProfile && (
                   <Card className="mt-6 p-6">
                     <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>

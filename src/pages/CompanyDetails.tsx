@@ -1,6 +1,5 @@
-
 import { useParams } from "react-router-dom";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import JobCard from "@/components/JobCard";
 import { useCompanyJobs } from "@/hooks/use-company-jobs";

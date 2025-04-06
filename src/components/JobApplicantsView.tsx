@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Search, Filter, Download } from "lucide-react";
-import { CalendarIcon } from "lucide-react";
+import { ChevronLeft, Search, Filter, Download, CalendarIcon } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
 import { Applicant, ApplicationStatus } from "@/types/applicant";
