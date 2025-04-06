@@ -58,6 +58,13 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  
+  // Dialog states
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
 
   const { 
     applications, 
@@ -122,9 +129,27 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
       
       // Show success message
       toast.success("Applicant deleted successfully");
+      
+      // Close the dialog if open
+      setIsDeleteOpen(false);
     } catch (err: any) {
       toast.error(`Failed to delete applicant: ${err.message}`);
     }
+  };
+
+  const handleViewApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsProfileOpen(true);
+  };
+
+  const handleViewCoverLetter = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsCoverLetterOpen(true);
+  };
+
+  const handleMessageApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsMessageOpen(true);
   };
 
   const handleExport = () => {
@@ -294,6 +319,9 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
                       onSelect={() => toggleApplicantSelection(applicant.id)}
                       onStatusChange={handleStatusChange}
                       onDelete={handleDeleteApplicant}
+                      onViewApplicant={handleViewApplicant}
+                      onViewCoverLetter={handleViewCoverLetter}
+                      onMessageApplicant={handleMessageApplicant}
                     />
                   ))}
                   {filteredApplicants.length === 0 && (
@@ -309,6 +337,35 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
           )}
         </CardContent>
       </Card>
+      
+      {/* Applicant Profile Dialog */}
+      <ApplicantProfileDialog 
+        applicant={selectedApplicant} 
+        open={isProfileOpen} 
+        onOpenChange={setIsProfileOpen} 
+      />
+      
+      {/* Cover Letter Dialog */}
+      <CoverLetterDialog 
+        applicant={selectedApplicant} 
+        open={isCoverLetterOpen} 
+        onOpenChange={setIsCoverLetterOpen} 
+      />
+      
+      {/* Delete Applicant Dialog */}
+      <DeleteApplicantDialog 
+        applicant={selectedApplicant} 
+        open={isDeleteOpen} 
+        onOpenChange={setIsDeleteOpen} 
+        onConfirmDelete={handleDeleteApplicant} 
+      />
+      
+      {/* Message Dialog */}
+      <MessageDialog 
+        applicant={selectedApplicant} 
+        open={isMessageOpen} 
+        onOpenChange={setIsMessageOpen} 
+      />
     </div>
   );
 };

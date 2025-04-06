@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicantWithScore } from "@/types/applicant";
 import { useBestApplicants } from "@/hooks/use-best-applicants";
+import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
+import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
 
 export const CompanyDashboardBestApplicants = () => {
   const { applicantsByJob, isLoading, error } = useBestApplicants();
@@ -25,6 +27,9 @@ export const CompanyDashboardBestApplicants = () => {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("scoreDesc");
   const [limitCount, setLimitCount] = useState<number | null>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<ApplicantWithScore | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
   
   React.useEffect(() => {
     // If this is the first render and we have jobs, expand the first one
@@ -98,7 +103,13 @@ export const CompanyDashboardBestApplicants = () => {
   };
   
   const handleViewProfile = (applicant) => {
-    toast.info(`Viewing profile for ${applicant.name}`);
+    setSelectedApplicant(applicant);
+    setIsProfileOpen(true);
+  };
+  
+  const handleViewCoverLetter = (applicant) => {
+    setSelectedApplicant(applicant);
+    setIsCoverLetterOpen(true);
   };
   
   const handleDownloadCV = (applicant) => {
@@ -268,6 +279,14 @@ export const CompanyDashboardBestApplicants = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                onClick={() => handleViewCoverLetter(applicant)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Cover Letter
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
                                 onClick={() => handleDownloadCV(applicant)}
                               >
                                 <Download className="h-4 w-4 mr-1" />
@@ -285,6 +304,20 @@ export const CompanyDashboardBestApplicants = () => {
           </Card>
         ))
       )}
+      
+      {/* Applicant Profile Dialog */}
+      <ApplicantProfileDialog 
+        applicant={selectedApplicant} 
+        open={isProfileOpen} 
+        onOpenChange={setIsProfileOpen} 
+      />
+      
+      {/* Cover Letter Dialog */}
+      <CoverLetterDialog 
+        applicant={selectedApplicant} 
+        open={isCoverLetterOpen} 
+        onOpenChange={setIsCoverLetterOpen} 
+      />
     </div>
   );
 };
