@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2, Users, Download, Filter, Search } from "lucide-react";
@@ -556,14 +557,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
               <Select 
-                value={filters.category} 
-                onValueChange={(value) => setFilter('category', value)}
+                value={filters.category || "all-categories"} 
+                onValueChange={(value) => setFilter('category', value === "all-categories" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all-categories">All Categories</SelectItem>
                   <SelectItem value="Technology">Technology</SelectItem>
                   <SelectItem value="Healthcare">Healthcare</SelectItem>
                   <SelectItem value="Finance">Finance</SelectItem>
@@ -579,14 +580,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="type">Job Type</Label>
               <Select 
-                value={filters.type} 
-                onValueChange={(value) => setFilter('type', value)}
+                value={filters.type || "all-types"} 
+                onValueChange={(value) => setFilter('type', value === "all-types" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select job type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all-types">All Types</SelectItem>
                   <SelectItem value="Full-time">Full-time</SelectItem>
                   <SelectItem value="Part-time">Part-time</SelectItem>
                   <SelectItem value="Contract">Contract</SelectItem>
@@ -599,14 +600,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="datePosted">Date Posted</Label>
               <Select 
-                value={filters.datePosted} 
-                onValueChange={(value) => setFilter('datePosted', value)}
+                value={filters.datePosted || "any-time"} 
+                onValueChange={(value) => setFilter('datePosted', value === "any-time" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any time" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any time</SelectItem>
+                  <SelectItem value="any-time">Any time</SelectItem>
                   <SelectItem value="today">Today</SelectItem>
                   <SelectItem value="this_week">This week</SelectItem>
                   <SelectItem value="this_month">This month</SelectItem>
@@ -619,7 +620,7 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
               <Input
                 id="location"
                 placeholder="Enter location"
-                value={filters.location}
+                value={filters.location || ""}
                 onChange={(e) => setFilter('location', e.target.value)}
               />
             </div>
