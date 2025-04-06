@@ -13,7 +13,10 @@ export interface Applicant {
   experience: string;
   education: string;
   coverLetter: string;
-  phone?: string; // Added phone property as optional
+  phone?: string;
+  userId?: string; // Add userId for messaging functionality
+  companyName?: string;
+  companyLogo?: string;
 }
 
 export interface ApplicantApplication {

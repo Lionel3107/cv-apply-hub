@@ -1,10 +1,10 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Users } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, Download, Filter, Search } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -24,6 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +39,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
+import { useJobFilters } from "@/hooks/use-job-filters";
+import { exportJobsData } from "@/utils/exportUtils";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Event, useEvents } from "@/hooks/use-events";
+import { Job } from "@/types/job";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const CompanyDashboardJobs = ({ onSelectJob }) => {
   const { profile } = useAuth();
@@ -51,6 +71,78 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
     is_featured: false,
     is_remote: false
   });
+  const { filters, setFilter, resetFilters } = useJobFilters();
+  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    description: '',
+    type: 'interview',
+    date: new Date(),
+    isAllDay: false,
+    status: 'pending'
+  });
+  const { events } = useEvents();
+
+  useEffect(() => {
+    if (!jobs) return;
+    
+    let filtered = [...jobs];
+    
+    if (filters.searchTerm) {
+      const searchTerm = filters.searchTerm.toLowerCase();
+      filtered = filtered.filter(job => 
+        job.title.toLowerCase().includes(searchTerm) ||
+        job.description.toLowerCase().includes(searchTerm) ||
+        job.location.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (filters.category) {
+      filtered = filtered.filter(job => job.category === filters.category);
+    }
+    
+    if (filters.type) {
+      filtered = filtered.filter(job => job.type === filters.type);
+    }
+    
+    if (filters.location) {
+      filtered = filtered.filter(job => job.location.includes(filters.location));
+    }
+    
+    if (filters.isRemote !== null) {
+      filtered = filtered.filter(job => job.isRemote === filters.isRemote);
+    }
+    
+    if (filters.featured !== undefined) {
+      filtered = filtered.filter(job => job.featured === filters.featured);
+    }
+    
+    if (filters.datePosted) {
+      const now = new Date();
+      
+      switch (filters.datePosted) {
+        case 'today':
+          const today = new Date(now.setHours(0, 0, 0, 0));
+          filtered = filtered.filter(job => new Date(job.postedDate) >= today);
+          break;
+        case 'this_week':
+          const thisWeek = new Date(now.setDate(now.getDate() - 7));
+          filtered = filtered.filter(job => new Date(job.postedDate) >= thisWeek);
+          break;
+        case 'this_month':
+          const thisMonth = new Date(now.setDate(now.getDate() - 30));
+          filtered = filtered.filter(job => new Date(job.postedDate) >= thisMonth);
+          break;
+        default:
+          break;
+      }
+    }
+    
+    setFilteredJobs(filtered);
+  }, [jobs, filters]);
 
   const handleEditClick = (job) => {
     setJobToEdit(job);
@@ -139,6 +231,68 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
     return applications.filter(app => app.jobTitle === jobs.find(j => j.id === jobId)?.title).length;
   };
 
+  const handleExportJobs = () => {
+    const jobsWithCounts = filteredJobs.map(job => ({
+      ...job,
+      applicationCount: getApplicantCount(job.id)
+    }));
+    
+    exportJobsData(jobsWithCounts);
+    toast.success("Jobs exported successfully");
+  };
+
+  const openScheduleDialog = (job) => {
+    setSelectedJob(job);
+    setEventForm({
+      title: `Interview for ${job.title}`,
+      description: '',
+      type: 'interview',
+      date: new Date(),
+      isAllDay: false,
+      status: 'pending'
+    });
+    setScheduleDialogOpen(true);
+  };
+
+  const handleEventFormChange = (field, value) => {
+    setEventForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleScheduleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedJob || !profile?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from("events")
+        .insert({
+          title: eventForm.title,
+          description: eventForm.description,
+          type: eventForm.type,
+          date: eventForm.date.toISOString(),
+          is_all_day: eventForm.isAllDay,
+          status: eventForm.status,
+          user_id: profile.id,
+          related_job_id: selectedJob.id
+        });
+
+      if (error) throw error;
+        
+      toast.success(`Event "${eventForm.title}" created successfully`);
+      setScheduleDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast.error("Failed to create event");
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setFilter('searchTerm', e.target.value);
+  };
+
   if (jobsLoading) {
     return (
       <div className="space-y-6">
@@ -179,30 +333,66 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h2 className="text-xl font-semibold">Your Posted Jobs</h2>
-        <Link to="/post-job">
-          <Button className="bg-brand-blue hover:bg-brand-darkBlue">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Post New Job
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setFilterDialogOpen(true)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
           </Button>
-        </Link>
-      </div>
-
-      {jobs.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          <h3 className="text-lg font-medium text-gray-700 mb-2">No jobs posted yet</h3>
-          <p className="text-gray-500 mb-6">Start posting jobs to attract qualified candidates</p>
+          <Button 
+            variant="outline" 
+            onClick={handleExportJobs}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           <Link to="/post-job">
             <Button className="bg-brand-blue hover:bg-brand-darkBlue">
               <PlusCircle className="h-4 w-4 mr-2" />
-              Post Your First Job
+              Post New Job
             </Button>
           </Link>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <Input
+          placeholder="Search jobs by title, description, or location..."
+          value={filters.searchTerm || ''}
+          onChange={handleSearchChange}
+          className="max-w-md"
+        />
+      </div>
+
+      {filteredJobs.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">No jobs found</h3>
+          <p className="text-gray-500 mb-6">
+            {jobs.length === 0 
+              ? "Start posting jobs to attract qualified candidates" 
+              : "Try adjusting your search filters to see more results"}
+          </p>
+          {jobs.length === 0 && (
+            <Link to="/post-job">
+              <Button className="bg-brand-blue hover:bg-brand-darkBlue">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Post Your First Job
+              </Button>
+            </Link>
+          )}
+          {jobs.length > 0 && (
+            <Button variant="outline" onClick={resetFilters}>
+              Clear All Filters
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.map((job) => (
+          {filteredJobs.map((job) => (
             <Card key={job.id} className="animate-fade-in hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-4">
@@ -276,6 +466,15 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openScheduleDialog(job)}
+                >
+                  <Calendar className="h-4 w-4 mr-1" />
+                  Schedule
                 </Button>
                 
                 <Button 
@@ -399,6 +598,217 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                 Cancel
               </Button>
               <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Filter Jobs</DialogTitle>
+            <DialogDescription>
+              Select criteria to filter your job listings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Select 
+                value={filters.category} 
+                onValueChange={(value) => setFilter('category', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="Technology">Technology</SelectItem>
+                  <SelectItem value="Healthcare">Healthcare</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="Education">Education</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Retail">Retail</SelectItem>
+                  <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                  <SelectItem value="Design">Design</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="type">Job Type</Label>
+              <Select 
+                value={filters.type} 
+                onValueChange={(value) => setFilter('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select job type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                  <SelectItem value="Temporary">Temporary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="datePosted">Date Posted</Label>
+              <Select 
+                value={filters.datePosted} 
+                onValueChange={(value) => setFilter('datePosted', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Any time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Any time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="this_week">This week</SelectItem>
+                  <SelectItem value="this_month">This month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                placeholder="Enter location"
+                value={filters.location}
+                onChange={(e) => setFilter('location', e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="featured">Job Status</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="featured"
+                  checked={filters.featured === true}
+                  onCheckedChange={(checked) => setFilter('featured', checked ? true : undefined)}
+                />
+                <Label htmlFor="featured">Featured jobs only</Label>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="remote">Remote Work</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="remote"
+                  checked={filters.isRemote === true}
+                  onCheckedChange={(checked) => setFilter('isRemote', checked ? true : undefined)}
+                />
+                <Label htmlFor="remote">Remote jobs only</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={resetFilters}
+            >
+              Reset Filters
+            </Button>
+            <Button onClick={() => setFilterDialogOpen(false)}>Apply Filters</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Schedule an Event</DialogTitle>
+            <DialogDescription>
+              Create a new event related to {selectedJob?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleScheduleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="event-title">Event Title</Label>
+                <Input
+                  id="event-title"
+                  value={eventForm.title}
+                  onChange={(e) => handleEventFormChange('title', e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="event-type">Event Type</Label>
+                <Select 
+                  value={eventForm.type} 
+                  onValueChange={(value) => handleEventFormChange('type', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="interview">Interview</SelectItem>
+                    <SelectItem value="meeting">Meeting</SelectItem>
+                    <SelectItem value="call">Phone Call</SelectItem>
+                    <SelectItem value="deadline">Application Deadline</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="event-date">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !eventForm.date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {eventForm.date ? format(eventForm.date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={eventForm.date}
+                      onSelect={(date) => handleEventFormChange('date', date || new Date())}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="event-description">Description (optional)</Label>
+                <Textarea
+                  id="event-description"
+                  value={eventForm.description}
+                  onChange={(e) => handleEventFormChange('description', e.target.value)}
+                  className="h-20"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is-all-day"
+                  checked={eventForm.isAllDay}
+                  onCheckedChange={(checked) => handleEventFormChange('isAllDay', checked)}
+                />
+                <Label htmlFor="is-all-day">All-day event</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setScheduleDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Event</Button>
             </DialogFooter>
           </form>
         </DialogContent>
