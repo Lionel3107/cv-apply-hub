@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Search, Filter, Download, Calendar } from "lucide-react";
+import { ChevronLeft, Search, Filter, Download } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
 import { Applicant, ApplicationStatus } from "@/types/applicant";
@@ -37,6 +37,7 @@ import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
   SelectContent, 
@@ -61,7 +62,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   
-  // Added new state for filters
   const [filters, setFilters] = useState<{
     status: ApplicationStatus | '';
     startDate: Date | null;
@@ -79,7 +79,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     
     let filtered = [...applications];
     
-    // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -91,12 +90,10 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
       );
     }
     
-    // Apply status filter
     if (filters.status) {
       filtered = filtered.filter(applicant => applicant.action === filters.status);
     }
     
-    // Apply date range filters
     if (filters.startDate) {
       filtered = filtered.filter(applicant => 
         new Date(applicant.appliedDate) >= filters.startDate!
@@ -109,7 +106,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
       );
     }
     
-    // Apply skills filter
     if (filters.skillsFilter) {
       const skillsTerms = filters.skillsFilter.toLowerCase().split(',').map(s => s.trim());
       filtered = filtered.filter(applicant => 
@@ -124,7 +120,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Already handled in the effect
   };
 
   const resetFilters = () => {
@@ -161,7 +156,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     if (!selectedApplicant) return;
     
     try {
-      // Delete the application from the database
       const { error: deleteError } = await supabase
         .from("applications")
         .delete()
@@ -169,10 +163,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         
       if (deleteError) throw deleteError;
       
-      // Close the dialog
       setIsDeleteDialogOpen(false);
       
-      // Show success message
       toast.success(`Application from ${selectedApplicant.name} has been deleted`);
     } catch (err: any) {
       console.error("Error deleting application:", err);
@@ -182,7 +174,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
 
   const handleChangeAction = async (applicant: Applicant, newAction: Applicant["action"]) => {
     try {
-      // Update the application status in the database
       const { error: updateError } = await supabase
         .from("applications")
         .update({ status: newAction })
@@ -190,7 +181,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         
       if (updateError) throw updateError;
       
-      // Show success message
       toast.success(`Application status updated to ${newAction}`);
     } catch (err: any) {
       console.error("Error updating application status:", err);
@@ -291,7 +281,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             </div>
           </form>
 
-          {/* Active filters display */}
           {(filters.status || filters.startDate || filters.endDate || filters.skillsFilter) && (
             <div className="mb-4 flex flex-wrap gap-2 items-center">
               <span className="text-sm text-gray-500">Active filters:</span>
@@ -367,7 +356,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         </CardContent>
       </Card>
 
-      {/* Filter Dialog */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -409,14 +397,14 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                       !filters.startDate && "text-muted-foreground"
                     )}
                   >
-                    <Calendar className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     {filters.startDate ? format(filters.startDate, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={filters.startDate || undefined}
+                    selected={filters.startDate}
                     onSelect={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
                     initialFocus
                   />
@@ -436,14 +424,14 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                       !filters.endDate && "text-muted-foreground"
                     )}
                   >
-                    <Calendar className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     {filters.endDate ? format(filters.endDate, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={filters.endDate || undefined}
+                    selected={filters.endDate}
                     onSelect={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
                     initialFocus
                   />

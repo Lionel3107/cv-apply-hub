@@ -1,282 +1,225 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { 
+  Building,
+  Menu,
+  X,
+  Search,
+  Briefcase,
+  User,
+  LogOut,
+  Home,
+  Info,
+  Buildings,
+  FileText,
+  Mail
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
-import { useMobile } from "@/hooks/use-mobile";
-import { Menu, X, ChevronDown, LogOut, User, Building, MessageSquare, FileText } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile"; // Corrected import
+import { Logo } from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const Header = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isMobile } = useMobile();
-  const { user, profile, signOut } = useAuth();
+export const Header = () => {
+  const { user, profile, isLoading } = useAuth();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  // Close mobile menu when route changes
+  // Close mobile menu when changing viewport size
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+    if (!isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile, mobileMenuOpen]);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      navigate("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Signed out successfully");
+    } catch (error: any) {
+      toast.error(`Error signing out: ${error.message}`);
     }
   };
 
-  const getInitials = () => {
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const getProfileInitials = () => {
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
-    } else if (profile?.first_name) {
-      return profile.first_name[0].toUpperCase();
-    } else if (user?.email) {
-      return user.email[0].toUpperCase();
     }
-    return "U";
+    if (profile?.first_name) {
+      return profile.first_name.substring(0, 2).toUpperCase();
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
-  const navItems = [
-    { path: "/", label: "Home" },
-    { path: "/jobs", label: "Find Jobs" },
-    { path: "/companies", label: "Companies" },
-  ];
-
-  const renderDesktopNav = () => (
-    <div className="container mx-auto px-4 flex items-center justify-between py-4">
-      <div className="flex items-center">
-        <Link to="/" className="text-2xl font-bold text-gray-800">
-          <span className="text-brand-blue">Job</span>Board
-        </Link>
-        <NavigationMenu className="hidden md:flex ml-10">
-          <NavigationMenuList>
-            {navItems.map((item) => (
-              <NavigationMenuItem key={item.path}>
-                <Link to={item.path} legacyBehavior passHref>
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === item.path && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    {item.label}
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            ))}
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
-
-      <div className="flex items-center gap-4">
-        {user ? (
-          <>
-            {profile?.is_employer ? (
-              <Link to="/post-job">
-                <Button variant="outline" className="hidden md:inline-flex">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Post Job
-                </Button>
-              </Link>
-            ) : null}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    {profile?.avatar_url ? (
-                      <div className="bg-cover bg-center h-full w-full" style={{ backgroundImage: `url(${profile.avatar_url})` }} />
-                    ) : (
-                      <AvatarFallback className="bg-brand-blue text-white">
-                        {getInitials()}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuItem className="font-medium">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>
-                    {profile?.first_name
-                      ? `${profile.first_name} ${profile.last_name || ""}`
-                      : user.email}
-                  </span>
-                </DropdownMenuItem>
-                {profile?.is_employer ? (
-                  <>
-                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                      <Building className="mr-2 h-4 w-4" />
-                      <span>Company Dashboard</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/post-job")}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>Post Job</span>
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem onClick={() => navigate("/applicant-dashboard")}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    <span>My Applications</span>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <Link to="/auth">
-            <Button className="bg-brand-blue hover:bg-brand-darkBlue">Sign In</Button>
+  return (
+    <header className="sticky top-0 z-40 bg-white border-b">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex justify-between items-center">
+          {/* Logo section */}
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-blue">
+            <Logo className="h-8 w-8" />
+            <span className="hidden sm:inline">JobPortal</span>
           </Link>
-        )}
-      </div>
-    </div>
-  );
 
-  const renderMobileNav = () => (
-    <div className="container mx-auto px-4">
-      <div className="flex items-center justify-between py-4">
-        <Link to="/" className="text-2xl font-bold text-gray-800">
-          <span className="text-brand-blue">Job</span>Board
-        </Link>
-        <button
-          onClick={toggleMenu}
-          className="p-2 text-gray-600 focus:outline-none focus:text-gray-800"
-        >
-          {isMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </button>
-      </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
+            <Link to="/" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              Home
+            </Link>
+            <Link to="/jobs" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              Find Jobs
+            </Link>
+            <Link to="/companies" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              Companies
+            </Link>
+            <Link to="/about" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              About Us
+            </Link>
+            {user && profile?.is_employer && (
+              <Link to="/post-job" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                Post Job
+              </Link>
+            )}
+          </nav>
 
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-white pt-16">
-          <div className="container mx-auto px-4">
-            <button
-              onClick={toggleMenu}
-              className="absolute top-4 right-4 p-2 text-gray-600 focus:outline-none focus:text-gray-800"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            <nav className="flex flex-col space-y-4 mt-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "px-4 py-2 rounded-md text-lg",
-                    location.pathname === item.path
-                      ? "bg-gray-100 font-medium"
-                      : "text-gray-600"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {user ? (
-                <>
-                  <div className="border-t border-gray-200 my-4 pt-4">
-                    <div className="flex items-center gap-3 px-4 py-2">
-                      <Avatar className="h-10 w-10">
-                        {profile?.avatar_url ? (
-                          <div className="bg-cover bg-center h-full w-full" style={{ backgroundImage: `url(${profile.avatar_url})` }} />
-                        ) : (
-                          <AvatarFallback className="bg-brand-blue text-white">
-                            {getInitials()}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {profile?.first_name
-                            ? `${profile.first_name} ${profile.last_name || ""}`
-                            : user.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    {profile?.is_employer ? (
-                      <>
-                        <Link
-                          to="/dashboard"
-                          className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
-                        >
-                          <Building className="mr-2 h-4 w-4" />
-                          Company Dashboard
-                        </Link>
-                        <Link
-                          to="/post-job"
-                          className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          Post Job
-                        </Link>
-                      </>
-                    ) : (
-                      <Link
-                        to="/applicant-dashboard"
-                        className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        My Applications
-                      </Link>
-                    )}
-
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-md"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <Link to="/auth" className="mt-4">
-                  <Button className="w-full bg-brand-blue hover:bg-brand-darkBlue">
-                    Sign In
+          {/* Right section - Auth buttons or user menu */}
+          <div className="flex items-center space-x-2">
+            {isLoading ? (
+              <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-1 h-auto rounded-full">
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarImage src={profile?.avatar_url || ""} />
+                      <AvatarFallback>{getProfileInitials()}</AvatarFallback>
+                    </Avatar>
                   </Button>
-                </Link>
-              )}
-            </nav>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="p-2">
+                    <p className="text-sm font-medium">
+                      {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}` : user.email}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {profile?.is_employer ? (
+                    <Link to="/dashboard">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Company Dashboard</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  ) : (
+                    <Link to="/applicant-dashboard">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>My Dashboard</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button>Sign in</Button>
+              </Link>
+            )}
+
+            {/* Mobile menu toggle */}
+            <div className="md:hidden">
+              <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
-      )}
-    </div>
-  );
 
-  return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      {isMobile ? renderMobileNav() : renderDesktopNav()}
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden pt-4 pb-2 border-t mt-3 space-y-2">
+            <Link to="/" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Home className="mr-2 h-5 w-5" />
+              Home
+            </Link>
+            <Link to="/jobs" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Briefcase className="mr-2 h-5 w-5" />
+              Find Jobs
+            </Link>
+            <Link to="/companies" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Buildings className="mr-2 h-5 w-5" />
+              Companies
+            </Link>
+            <Link to="/about" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Info className="mr-2 h-5 w-5" />
+              About Us
+            </Link>
+            {user && (
+              <>
+                {profile?.is_employer ? (
+                  <>
+                    <Link to="/dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                      <Building className="mr-2 h-5 w-5" />
+                      Company Dashboard
+                    </Link>
+                    <Link to="/post-job" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                      <FileText className="mr-2 h-5 w-5" />
+                      Post Job
+                    </Link>
+                  </>
+                ) : (
+                  <Link to="/applicant-dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                    <User className="mr-2 h-5 w-5" />
+                    My Dashboard
+                  </Link>
+                )}
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full text-left flex items-center px-3 py-2 rounded-md hover:bg-red-50 text-red-600"
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Sign out
+                </button>
+              </>
+            )}
+          </nav>
+        )}
+      </div>
     </header>
   );
 };
-
-export default Header;
