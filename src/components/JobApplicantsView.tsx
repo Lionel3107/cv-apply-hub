@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Search, Filter, Download, CalendarIcon } from "lucide-react";
+import { ChevronLeft, Search, Filter, Download } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
 import { Applicant, ApplicationStatus } from "@/types/applicant";
@@ -36,7 +36,6 @@ import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
   SelectContent, 
@@ -44,293 +43,228 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface JobApplicantsViewProps {
   job: Job;
   onBack: () => void;
 }
 
-export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
-  const { applications, isLoading, error } = useApplications(job.id);
+export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBack }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredApplicants, setFilteredApplicants] = useState<Applicant[]>([]);
-  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  
-  const [filters, setFilters] = useState<{
-    status: ApplicationStatus | '';
-    startDate: Date | null;
-    endDate: Date | null;
-    skillsFilter: string;
-  }>({
-    status: '',
-    startDate: null,
-    endDate: null,
-    skillsFilter: ''
-  });
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "">("");
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedApplicants, setSelectedApplicants] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+
+  const { 
+    applicants, 
+    isLoading, 
+    error, 
+    updateApplicationStatus,
+    deleteApplication 
+  } = useApplications(job.id);
+
+  const filteredApplicants = React.useMemo(() => {
+    let filtered = [...(applicants || [])];
+
+    if (searchTerm) {
+      filtered = filtered.filter(applicant =>
+        applicant.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter(applicant => applicant.status === statusFilter);
+    }
+
+    if (date) {
+      filtered = filtered.filter(applicant => {
+        const applicationDate = new Date(applicant.applied_date);
+        return (
+          applicationDate.getFullYear() === date.getFullYear() &&
+          applicationDate.getMonth() === date.getMonth() &&
+          applicationDate.getDate() === date.getDate()
+        );
+      });
+    }
+
+    return filtered;
+  }, [applicants, searchTerm, statusFilter, date]);
+
+  const handleStatusChange = async (applicantId: string, newStatus: ApplicationStatus) => {
+    try {
+      await updateApplicationStatus(applicantId, newStatus);
+      toast.success("Application status updated successfully.");
+    } catch (error: any) {
+      toast.error(`Failed to update status: ${error.message}`);
+    }
+  };
+
+  const handleDeleteApplicant = async (applicantId: string) => {
+    try {
+      await deleteApplication(applicantId);
+      toast.success("Applicant deleted successfully.");
+    } catch (error: any) {
+      toast.error(`Failed to delete applicant: ${error.message}`);
+    }
+  };
+
+  const handleExport = () => {
+    if (applicants) {
+      exportApplicantsData(applicants, job.title);
+    } else {
+      toast.error("No data to export.");
+    }
+  };
+
+  const toggleApplicantSelection = (applicantId: string) => {
+    setSelectedApplicants(prev => {
+      if (prev.includes(applicantId)) {
+        return prev.filter(id => id !== applicantId);
+      } else {
+        return [...prev, applicantId];
+      }
+    });
+  };
 
   useEffect(() => {
-    if (!applications) return;
-    
-    let filtered = [...applications];
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (applicant) =>
-          applicant.name.toLowerCase().includes(term) ||
-          applicant.email.toLowerCase().includes(term) ||
-          applicant.experience.toLowerCase().includes(term) ||
-          applicant.skills.some((skill) => skill.toLowerCase().includes(term))
-      );
+    if (selectAll) {
+      setSelectedApplicants(filteredApplicants.map(applicant => applicant.id));
+    } else {
+      setSelectedApplicants([]);
     }
-    
-    if (filters.status) {
-      filtered = filtered.filter(applicant => applicant.action === filters.status);
-    }
-    
-    if (filters.startDate) {
-      filtered = filtered.filter(applicant => 
-        new Date(applicant.appliedDate) >= filters.startDate!
-      );
-    }
-    
-    if (filters.endDate) {
-      filtered = filtered.filter(applicant => 
-        new Date(applicant.appliedDate) <= filters.endDate!
-      );
-    }
-    
-    if (filters.skillsFilter) {
-      const skillsTerms = filters.skillsFilter.toLowerCase().split(',').map(s => s.trim());
-      filtered = filtered.filter(applicant => 
-        applicant.skills.some(skill => 
-          skillsTerms.some(term => skill.toLowerCase().includes(term))
-        )
-      );
-    }
-    
-    setFilteredApplicants(filtered);
-  }, [applications, searchTerm, filters]);
+  }, [selectAll, filteredApplicants]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const toggleSelectAll = () => {
+    setSelectAll(!selectAll);
   };
 
-  const resetFilters = () => {
-    setFilters({
-      status: '',
-      startDate: null,
-      endDate: null,
-      skillsFilter: ''
-    });
-    setSearchTerm('');
-  };
-
-  const handleViewProfile = (applicant: Applicant) => {
-    setSelectedApplicant(applicant);
-    setIsProfileOpen(true);
-  };
-
-  const handleViewCoverLetter = (applicant: Applicant) => {
-    setSelectedApplicant(applicant);
-    setIsCoverLetterOpen(true);
-  };
-
-  const handleMessageApplicant = (applicant: Applicant) => {
-    setSelectedApplicant(applicant);
-    setIsMessageDialogOpen(true);
-  };
-
-  const handleDeleteClick = (applicant: Applicant) => {
-    setSelectedApplicant(applicant);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedApplicant) return;
-    
-    try {
-      const { error: deleteError } = await supabase
-        .from("applications")
-        .delete()
-        .eq("id", selectedApplicant.id);
-        
-      if (deleteError) throw deleteError;
-      
-      setIsDeleteDialogOpen(false);
-      
-      toast.success(`Application from ${selectedApplicant.name} has been deleted`);
-    } catch (err: any) {
-      console.error("Error deleting application:", err);
-      toast.error("Failed to delete application");
-    }
-  };
-
-  const handleChangeAction = async (applicant: Applicant, newAction: Applicant["action"]) => {
-    try {
-      const { error: updateError } = await supabase
-        .from("applications")
-        .update({ status: newAction })
-        .eq("id", applicant.id);
-        
-      if (updateError) throw updateError;
-      
-      toast.success(`Application status updated to ${newAction}`);
-    } catch (err: any) {
-      console.error("Error updating application status:", err);
-      toast.error("Failed to update status");
-    }
-  };
-
-  const handleExportApplicants = () => {
-    exportApplicantsData(filteredApplicants, job.title);
-    toast.success(`Applicants for "${job.title}" exported successfully`);
-  };
-
-  if (isLoading) {
-    return (
-      <div>
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">{job.title} - Applicants</h2>
-        </div>
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Loading applicants...</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="animate-pulse space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold">{job.title} - Applicants</h2>
-        </div>
-        <Card>
-          <CardContent className="py-10">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">Error loading applicants: {error}</p>
-              <Button onClick={() => window.location.reload()}>Retry</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const allStatuses: ApplicationStatus[] = ["pending", "reviewed", "interviewing", "offered", "hired", "rejected"];
 
   return (
     <div>
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" onClick={onBack} className="mr-2">
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
-        <h2 className="text-2xl font-bold">{job.title} - Applicants</h2>
-      </div>
+      <Button variant="ghost" onClick={onBack} className="mb-4">
+        <ChevronLeft className="mr-2 h-4 w-4" />
+        Back to Job Details
+      </Button>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <CardTitle>All Applicants ({filteredApplicants.length})</CardTitle>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsFilterDialogOpen(true)}>
-                <Filter className="h-4 w-4 mr-1" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExportApplicants}>
-                <Download className="h-4 w-4 mr-1" />
-                Export
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Applicants for {job.title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSearch} className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
+            <div className="relative w-full md:w-1/3">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
+                type="text"
+                placeholder="Search applicants..."
                 className="pl-10"
-                placeholder="Search by name, skills, or experience..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-          </form>
 
-          {(filters.status || filters.startDate || filters.endDate || filters.skillsFilter) && (
-            <div className="mb-4 flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-gray-500">Active filters:</span>
-              
-              {filters.status && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
-                  Status: {filters.status}
-                </Badge>
-              )}
-              
-              {filters.startDate && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
-                  From: {format(filters.startDate, 'MMM dd, yyyy')}
-                </Badge>
-              )}
-              
-              {filters.endDate && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
-                  To: {format(filters.endDate, 'MMM dd, yyyy')}
-                </Badge>
-              )}
-              
-              {filters.skillsFilter && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
-                  Skills: {filters.skillsFilter}
-                </Badge>
-              )}
-              
-              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2 text-gray-500">
-                Clear all
+            <div className="flex items-center space-x-2">
+              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "")}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All statuses</SelectItem>
+                        {allStatuses.map(status => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Label htmlFor="date">Applied Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("2023-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    <Button variant="secondary" size="sm" className="w-full" onClick={() => {
+                      setStatusFilter("");
+                      setDate(undefined);
+                      setIsFilterOpen(false);
+                    }}>
+                      Reset Filters
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Button variant="secondary" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
               </Button>
             </div>
-          )}
+          </div>
 
-          {filteredApplicants.length === 0 ? (
-            <div className="text-center py-12 border rounded-md bg-gray-50">
-              <p className="text-gray-500 mb-2">No applicants found</p>
-              <p className="text-sm text-gray-400">
-                {applications.length > 0
-                  ? "Try adjusting your search criteria"
-                  : "There are no applications for this job yet"}
-              </p>
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : error ? (
+            <p className="text-red-500">Error: {error}</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Applicant</TableHead>
-                    <TableHead>Job</TableHead>
-                    <TableHead>Skills</TableHead>
+                    <TableHead className="w-[50px]">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Applied Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -340,148 +274,26 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                     <ApplicantRow
                       key={applicant.id}
                       applicant={applicant}
-                      onViewApplicant={handleViewProfile}
-                      onViewCoverLetter={handleViewCoverLetter}
-                      onEditApplicant={() => {}}
-                      onDeleteApplicant={handleDeleteClick}
-                      onChangeAction={handleChangeAction}
-                      onMessageApplicant={handleMessageApplicant}
+                      job={job}
+                      isSelected={selectedApplicants.includes(applicant.id)}
+                      onSelect={() => toggleApplicantSelection(applicant.id)}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDeleteApplicant}
                     />
                   ))}
+                  {filteredApplicants.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">
+                        No applicants found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Filter Applicants</DialogTitle>
-            <DialogDescription>
-              Set criteria to filter applicants for {job.title}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="status">Application Status</Label>
-              <Select 
-                value={filters.status} 
-                onValueChange={(value: ApplicationStatus | '') => setFilters(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="interviewed">Interviewed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="hired">Hired</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="dateRange">Applied Date (From)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="startDate"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !filters.startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.startDate ? format(filters.startDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={filters.startDate}
-                    onSelect={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="endDate">Applied Date (To)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="endDate"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !filters.endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.endDate ? format(filters.endDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={filters.endDate}
-                    onSelect={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="skills">Skills (comma separated)</Label>
-              <Input
-                id="skills"
-                placeholder="e.g. React, TypeScript, CSS"
-                value={filters.skillsFilter}
-                onChange={(e) => setFilters(prev => ({ ...prev, skillsFilter: e.target.value }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={resetFilters}>
-              Reset Filters
-            </Button>
-            <Button onClick={() => setIsFilterDialogOpen(false)}>Apply Filters</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {selectedApplicant && (
-        <>
-          <ApplicantProfileDialog
-            applicant={selectedApplicant}
-            open={isProfileOpen}
-            onOpenChange={setIsProfileOpen}
-          />
-          <CoverLetterDialog
-            applicant={selectedApplicant}
-            open={isCoverLetterOpen}
-            onOpenChange={setIsCoverLetterOpen}
-          />
-          <DeleteApplicantDialog
-            applicant={selectedApplicant}
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-            onConfirm={handleDeleteConfirm}
-          />
-          <MessageDialog
-            applicant={selectedApplicant}
-            open={isMessageDialogOpen}
-            onOpenChange={setIsMessageDialogOpen}
-          />
-        </>
-      )}
     </div>
   );
 };
