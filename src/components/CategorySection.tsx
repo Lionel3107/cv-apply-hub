@@ -1,10 +1,11 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Code, Briefcase, PenTool, BarChart, Server, ShoppingBag } from "lucide-react";
+import { Code, Briefcase, PenTool, BarChart, Server, ShoppingBag, HardHat, Microscope, Landmark, HeartPulse } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { mockJobs } from "@/data/mockJobs";
+import { useCategories } from "@/hooks/use-categories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryProps {
   title: string;
@@ -34,51 +35,28 @@ const Category = ({ title, count, icon, color }: CategoryProps) => {
 };
 
 const CategorySection = () => {
-  // Calculate the actual number of jobs in each category
-  const getCategoryCount = (categoryName: string) => {
-    return mockJobs.filter(job => 
-      job.category.toLowerCase() === categoryName.toLowerCase()
-    ).length;
-  };
+  const { categories, isLoading, error } = useCategories();
 
-  const categories = [
-    { 
-      title: "Technology", 
-      count: getCategoryCount("Technology"), 
-      icon: <Code size={24} className="text-white" />, 
-      color: "bg-blue-500" 
-    },
-    { 
-      title: "Business", 
-      count: getCategoryCount("Business"), 
+  // Map category names to icons and colors
+  const getCategoryIcon = (name: string) => {
+    const categoryIcons: Record<string, { icon: React.ReactNode; color: string }> = {
+      "Technology": { icon: <Code size={24} className="text-white" />, color: "bg-blue-500" },
+      "Business": { icon: <Briefcase size={24} className="text-white" />, color: "bg-purple-500" },
+      "Design": { icon: <PenTool size={24} className="text-white" />, color: "bg-pink-500" },
+      "Marketing": { icon: <BarChart size={24} className="text-white" />, color: "bg-green-500" },
+      "Engineering": { icon: <Server size={24} className="text-white" />, color: "bg-orange-500" },
+      "Sales": { icon: <ShoppingBag size={24} className="text-white" />, color: "bg-red-500" },
+      "Construction": { icon: <HardHat size={24} className="text-white" />, color: "bg-yellow-500" },
+      "Science": { icon: <Microscope size={24} className="text-white" />, color: "bg-indigo-500" },
+      "Finance": { icon: <Landmark size={24} className="text-white" />, color: "bg-cyan-500" },
+      "Healthcare": { icon: <HeartPulse size={24} className="text-white" />, color: "bg-emerald-500" },
+    };
+
+    return categoryIcons[name] || { 
       icon: <Briefcase size={24} className="text-white" />, 
-      color: "bg-purple-500" 
-    },
-    { 
-      title: "Design", 
-      count: getCategoryCount("Design"), 
-      icon: <PenTool size={24} className="text-white" />, 
-      color: "bg-pink-500" 
-    },
-    { 
-      title: "Marketing", 
-      count: getCategoryCount("Marketing"), 
-      icon: <BarChart size={24} className="text-white" />, 
-      color: "bg-green-500" 
-    },
-    { 
-      title: "Engineering", 
-      count: getCategoryCount("Engineering"), 
-      icon: <Server size={24} className="text-white" />, 
-      color: "bg-orange-500" 
-    },
-    { 
-      title: "Sales", 
-      count: getCategoryCount("Sales"), 
-      icon: <ShoppingBag size={24} className="text-white" />, 
-      color: "bg-red-500" 
-    },
-  ];
+      color: "bg-gray-500" 
+    };
+  };
 
   // Only display the first 3 categories
   const displayedCategories = categories.slice(0, 3);
@@ -102,17 +80,40 @@ const CategorySection = () => {
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedCategories.map((category) => (
-          <Category 
-            key={category.title}
-            title={category.title}
-            count={category.count}
-            icon={category.icon}
-            color={category.color}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6 flex items-center">
+                <Skeleton className="w-12 h-12 rounded-md mr-4" />
+                <div>
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayedCategories.map((category) => {
+            const { icon, color } = getCategoryIcon(category.name);
+            return (
+              <Category 
+                key={category.name}
+                title={category.name}
+                count={category.count}
+                icon={icon}
+                color={color}
+              />
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

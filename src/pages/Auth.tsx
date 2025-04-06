@@ -86,36 +86,28 @@ const Auth = () => {
 
       if (data.isEmployer && data.companyName) {
         // Create company record
-        const { error: companyError } = await supabase
+        const { error: companyError, data: companyData } = await supabase
           .from('companies')
           .insert([
             { 
               name: data.companyName,
               email: data.email,
             }
-          ]);
+          ])
+          .select('id')
+          .single();
           
         if (companyError) throw companyError;
         
-        // Update the user's profile with company_id
-        // This requires a separate query after creation
-        if (authData.user) {
-          const { data: companyData } = await supabase
-            .from('companies')
-            .select('id')
-            .eq('name', data.companyName)
-            .eq('email', data.email)
-            .single();
-            
-          if (companyData) {
-            await supabase
-              .from('profiles')
-              .update({ 
-                company_id: companyData.id,
-                is_employer: true 
-              })
-              .eq('id', authData.user.id);
-          }
+        // Update the user's profile with company_id and ensure is_employer is true
+        if (authData.user && companyData) {
+          await supabase
+            .from('profiles')
+            .update({ 
+              company_id: companyData.id,
+              is_employer: true 
+            })
+            .eq('id', authData.user.id);
         }
       }
 

@@ -6,33 +6,103 @@ import Footer from "@/components/Footer";
 import JobApplicationForm from "@/components/JobApplicationForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Briefcase, MapPin, Calendar, DollarSign, Building, Globe } from "lucide-react";
+import { Briefcase, MapPin, Calendar, DollarSign, Building, Globe, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { mockJobs } from "@/data/mockJobs";
 import { Job } from "@/types/job";
+import { supabase } from "@/integrations/supabase/client";
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      const foundJob = mockJobs.find(j => j.id === id);
+    const fetchJob = async () => {
+      if (!id) return;
       
-      if (foundJob) {
-        setJob(foundJob);
-      } else {
-        // Job not found, redirect to homepage
-        navigate("/");
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const { data, error: fetchError } = await supabase
+          .from("jobs")
+          .select(`
+            id,
+            title,
+            company_id,
+            type,
+            location,
+            posted_date,
+            is_featured,
+            is_remote,
+            description,
+            requirements,
+            benefits,
+            salary,
+            tags,
+            category,
+            companies (
+              id,
+              name,
+              logo_url,
+              website,
+              email,
+              phone,
+              description
+            )
+          `)
+          .eq("id", id)
+          .single();
+        
+        if (fetchError) {
+          throw fetchError;
+        }
+        
+        if (!data) {
+          throw new Error("Job not found");
+        }
+        
+        // Transform the data to match our Job type
+        const jobData: Job = {
+          id: data.id,
+          title: data.title,
+          company: data.companies?.name || "Unknown Company",
+          companyLogo: data.companies?.logo_url,
+          location: data.location,
+          type: data.type,
+          category: data.category,
+          tags: data.tags || [],
+          description: data.description,
+          requirements: data.requirements || [],
+          benefits: data.benefits || [],
+          salary: data.salary,
+          postedDate: data.posted_date,
+          featured: data.is_featured,
+          isRemote: data.is_remote,
+          companyProfile: data.companies ? {
+            website: data.companies.website,
+            email: data.companies.email,
+            phone: data.companies.phone,
+            description: data.companies.description,
+          } : undefined,
+        };
+        
+        setJob(jobData);
+      } catch (err: any) {
+        console.error("Error fetching job:", err);
+        setError(err.message);
+        
+        if (err.message === "Job not found") {
+          navigate("/jobs", { replace: true });
+        }
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    }, 500);
+    };
     
-    return () => clearTimeout(timer);
+    fetchJob();
   }, [id, navigate]);
   
   if (isLoading) {
@@ -40,9 +110,25 @@ const JobDetails = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow flex items-center justify-center">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-56 bg-gray-200 rounded mb-4"></div>
-            <div className="h-6 w-40 bg-gray-200 rounded"></div>
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-10 w-10 animate-spin text-brand-blue mb-4" />
+            <p className="text-gray-600">Loading job details...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error && error !== "Job not found") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+            <p className="text-gray-700 mb-6">{error}</p>
+            <Button onClick={() => navigate("/jobs")}>Back to Jobs</Button>
           </div>
         </main>
         <Footer />
@@ -109,7 +195,7 @@ const JobDetails = () => {
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Calendar size={18} className="mr-2" />
-                    <span>Posted {job.postedDate}</span>
+                    <span>Posted {new Date(job.postedDate).toLocaleDateString()}</span>
                   </div>
                   {job.salary && (
                     <div className="flex items-center text-gray-600">
@@ -185,20 +271,23 @@ const JobDetails = () => {
                 <JobApplicationForm job={job} />
                 
                 {/* Company Card */}
-                <Card className="mt-6 p-6">
-                  <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
-                  <p className="text-gray-700 mb-4">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                    Sed euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl, 
-                    eget aliquam nisl nisl sit amet nisl.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
-                  >
-                    View Company Profile
-                  </Button>
-                </Card>
+                {job.companyProfile && (
+                  <Card className="mt-6 p-6">
+                    <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
+                    <p className="text-gray-700 mb-4">
+                      {job.companyProfile.description || `Learn more about opportunities at ${job.company}.`}
+                    </p>
+                    {job.companyProfile.website && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
+                        onClick={() => window.open(job.companyProfile?.website, '_blank')}
+                      >
+                        Visit Company Website
+                      </Button>
+                    )}
+                  </Card>
+                )}
               </div>
             </div>
           </div>

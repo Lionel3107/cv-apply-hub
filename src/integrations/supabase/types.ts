@@ -440,7 +440,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_company_jobs: {
+        Args: {
+          company_id_param: string
+        }
+        Returns: {
+          id: string
+          title: string
+          company_name: string
+          company_logo: string
+          location: string
+          type: string
+          category: string
+          tags: string[]
+          description: string
+          requirements: string[]
+          benefits: string[]
+          salary: string
+          posted_date: string
+          featured: boolean
+          is_remote: boolean
+        }[]
+      }
+      get_job_count_by_category: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          count: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

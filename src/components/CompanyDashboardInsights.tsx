@@ -1,26 +1,105 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useJobs } from "@/hooks/use-jobs";
+import { useApplications } from "@/hooks/use-applications";
 
 export const CompanyDashboardInsights = () => {
-  // Mock data for visualizations
-  const applicationData = [
-    { name: 'Jan', applications: 12 },
-    { name: 'Feb', applications: 19 },
-    { name: 'Mar', applications: 24 },
-    { name: 'Apr', applications: 18 },
-    { name: 'May', applications: 35 },
-    { name: 'Jun', applications: 40 },
-  ];
+  const { profile } = useAuth();
+  const { jobs } = useJobs(profile?.company_id);
+  const { applications } = useApplications();
+  const [applicationsByMonth, setApplicationsByMonth] = useState([]);
+  const [sourceData, setSourceData] = useState([]);
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    totalApplications: 0,
+    conversionRate: 0,
+    changeFromLastMonth: {
+      jobs: 0,
+      applications: 0,
+      conversion: 0
+    }
+  });
 
-  const sourceData = [
-    { name: 'Direct', value: 40 },
-    { name: 'Referral', value: 25 },
-    { name: 'Social Media', value: 20 },
-    { name: 'Email', value: 15 },
-  ];
+  useEffect(() => {
+    // Calculate total jobs and applications
+    const totalJobs = jobs.length;
+    const totalApplications = applications.length;
+    
+    // Calculate conversion rate (assuming each job has views data)
+    // For now, we'll use a placeholder calculation
+    const views = totalJobs * 10; // Assuming each job gets about 10 views on average
+    const conversionRate = views > 0 ? Number(((totalApplications / views) * 100).toFixed(1)) : 0;
+    
+    // Set the stats
+    setStats({
+      totalJobs,
+      totalApplications,
+      conversionRate,
+      changeFromLastMonth: {
+        jobs: 2, // Placeholder for now
+        applications: totalApplications > 10 ? 10 : 2, // Placeholder
+        conversion: 1.2 // Placeholder
+      }
+    });
+
+    // Generate application data by month
+    const currentDate = new Date();
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(currentDate.getMonth() - 5 + i);
+      return {
+        name: date.toLocaleString('default', { month: 'short' }),
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        applications: 0
+      };
+    });
+
+    // Count applications per month
+    applications.forEach(app => {
+      const appDate = new Date(app.appliedDate);
+      const appMonth = appDate.getMonth();
+      const appYear = appDate.getFullYear();
+
+      const monthIndex = last6Months.findIndex(
+        m => m.month === appMonth && m.year === appYear
+      );
+
+      if (monthIndex !== -1) {
+        last6Months[monthIndex].applications++;
+      }
+    });
+
+    setApplicationsByMonth(last6Months);
+
+    // Set source data based on actual applications
+    // For now, we'll use a distribution based on the total applications
+    if (totalApplications > 0) {
+      const direct = Math.floor(totalApplications * 0.4);
+      const referral = Math.floor(totalApplications * 0.25);
+      const social = Math.floor(totalApplications * 0.2);
+      const email = totalApplications - direct - referral - social;
+
+      setSourceData([
+        { name: 'Direct', value: direct },
+        { name: 'Referral', value: referral },
+        { name: 'Social Media', value: social },
+        { name: 'Email', value: email },
+      ]);
+    } else {
+      setSourceData([
+        { name: 'Direct', value: 0 },
+        { name: 'Referral', value: 0 },
+        { name: 'Social Media', value: 0 },
+        { name: 'Email', value: 0 },
+      ]);
+    }
+  }, [jobs, applications]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -33,9 +112,9 @@ export const CompanyDashboardInsights = () => {
             <CardDescription>Current active job listings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">5</div>
+            <div className="text-3xl font-bold">{stats.totalJobs}</div>
             <p className="text-xs text-green-500 flex items-center mt-1">
-              +2 from last month
+              +{stats.changeFromLastMonth.jobs} from last month
             </p>
           </CardContent>
         </Card>
@@ -46,9 +125,9 @@ export const CompanyDashboardInsights = () => {
             <CardDescription>Across all job listings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">148</div>
+            <div className="text-3xl font-bold">{stats.totalApplications}</div>
             <p className="text-xs text-green-500 flex items-center mt-1">
-              +35 from last month
+              +{stats.changeFromLastMonth.applications} from last month
             </p>
           </CardContent>
         </Card>
@@ -59,9 +138,9 @@ export const CompanyDashboardInsights = () => {
             <CardDescription>Views to applications</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">8.7%</div>
+            <div className="text-3xl font-bold">{stats.conversionRate}%</div>
             <p className="text-xs text-green-500 flex items-center mt-1">
-              +1.2% from last month
+              +{stats.changeFromLastMonth.conversion}% from last month
             </p>
           </CardContent>
         </Card>
@@ -78,7 +157,7 @@ export const CompanyDashboardInsights = () => {
           <CardContent>
             <div className="h-60 md:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={applicationData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <BarChart data={applicationsByMonth} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <XAxis dataKey="name" tickLine={false} />
                   <YAxis tickLine={false} />
                   <Tooltip />

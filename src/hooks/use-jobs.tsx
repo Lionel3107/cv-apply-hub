@@ -61,7 +61,7 @@ export const useJobs = (companyId?: string | null) => {
         }
 
         // Transform the data to match our Job type
-        const transformedJobs = data.map((job) => ({
+        const transformedJobs = data?.map((job) => ({
           id: job.id,
           title: job.title,
           company: job.companies?.name || "Unknown Company",
@@ -83,7 +83,7 @@ export const useJobs = (companyId?: string | null) => {
             phone: job.companies.phone,
             description: job.companies.description,
           } : undefined,
-        }));
+        })) || [];
 
         setJobs(transformedJobs);
       } catch (err: any) {

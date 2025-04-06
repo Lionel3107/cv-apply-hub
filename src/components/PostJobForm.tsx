@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { mockJobs } from "@/data/mockJobs";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Creating a schema for job posting validation
 const formSchema = z.object({
@@ -63,13 +64,14 @@ interface PostJobFormProps {
 export function PostJobForm({ onJobPosted }: PostJobFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
+  const { profile } = useAuth();
 
   // Initialize the form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      company: "",
+      company: profile?.company_id ? "" : "", // Will be filled automatically for employers with company
       location: "",
       type: "Full-time",
       category: "Technology",
@@ -86,42 +88,101 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  // If the user is an employer with a company, pre-fill the company name
+  useEffect(() => {
+    const fetchCompanyDetails = async () => {
+      if (profile?.company_id) {
+        try {
+          const { data, error } = await supabase
+            .from('companies')
+            .select('name, website, email, phone, description')
+            .eq('id', profile.company_id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (data) {
+            form.setValue('company', data.name);
+            form.setValue('companyWebsite', data.website || '');
+            form.setValue('companyEmail', data.email || '');
+            form.setValue('companyPhone', data.phone || '');
+            form.setValue('companyDescription', data.description || '');
+          }
+        } catch (error) {
+          console.error('Error fetching company details:', error);
+        }
+      }
+    };
+    
+    fetchCompanyDetails();
+  }, [profile, form]);
+
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     
-    // Simulate API call with a timeout
-    setTimeout(() => {
-      // In a real app, this would be an API call to save the job
-      const newJob = {
-        id: (mockJobs.length + 1).toString(),
-        title: values.title,
-        company: values.company,
-        location: values.location,
-        type: values.type,
-        category: values.category,
-        tags: [values.type, values.category],
-        description: values.description,
-        requirements: values.requirements.split('\n').filter(item => item.trim() !== ''),
-        benefits: values.benefits.split('\n').filter(item => item.trim() !== ''),
-        salary: values.salary || "Competitive",
-        postedDate: new Date().toISOString(),
-        featured: values.featured,
-        isRemote: values.isRemote,
-        companyProfile: {
-          website: values.companyWebsite || "",
-          email: values.companyEmail || "",
-          phone: values.companyPhone || "",
-          description: values.companyDescription || "",
-        }
-      };
+    try {
+      // First ensure the user has a company
+      let companyId = profile?.company_id;
       
-      // In a real app, we would add this to the database
-      // For now, we'll just add it to the mockJobs array (without persisting)
-      console.log("New job posted:", newJob);
+      if (!companyId) {
+        // Create a new company if the user doesn't have one
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: values.company,
+            website: values.companyWebsite,
+            email: values.companyEmail,
+            phone: values.companyPhone,
+            description: values.companyDescription
+          })
+          .select('id')
+          .single();
+          
+        if (companyError) throw companyError;
+        
+        companyId = companyData.id;
+        
+        // Update the user's profile with the new company_id and set is_employer to true
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            company_id: companyId,
+            is_employer: true 
+          })
+          .eq('id', profile?.id || '');
+          
+        if (profileError) throw profileError;
+      }
       
-      setIsSubmitting(false);
+      // Insert the job into the database
+      const { error: jobError } = await supabase
+        .from('jobs')
+        .insert({
+          title: values.title,
+          company_id: companyId,
+          location: values.location,
+          type: values.type,
+          category: values.category,
+          description: values.description,
+          requirements: values.requirements.split('\n').filter(item => item.trim() !== ''),
+          benefits: values.benefits.split('\n').filter(item => item.trim() !== ''),
+          salary: values.salary,
+          is_remote: values.isRemote,
+          is_featured: values.featured,
+          tags: [values.type, values.category],
+          posted_date: new Date().toISOString(),
+        });
+        
+      if (jobError) throw jobError;
+      
+      // Call the onJobPosted callback
       onJobPosted();
-    }, 1500);
+    } catch (error: any) {
+      console.error('Error posting job:', error);
+      alert(`Failed to post job: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -157,7 +218,12 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
                   <FormControl>
                     <div className="relative">
                       <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input placeholder="e.g. Acme Inc." className="pl-10" {...field} />
+                      <Input 
+                        placeholder="e.g. Acme Inc." 
+                        className="pl-10" 
+                        {...field} 
+                        disabled={!!profile?.company_id}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
