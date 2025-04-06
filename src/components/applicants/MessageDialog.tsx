@@ -100,6 +100,7 @@ export const MessageDialog = ({
                     key={message.id} 
                     message={message} 
                     isFromCurrentUser={message.senderId === user?.id}
+                    formatMessageTime={formatMessageTime}
                   />
                 ))}
                 <div ref={messagesEndRef} />
@@ -147,9 +148,10 @@ export const MessageDialog = ({
 interface MessageBubbleProps {
   message: Message;
   isFromCurrentUser: boolean;
+  formatMessageTime: (dateString: string) => string;
 }
 
-const MessageBubble = ({ message, isFromCurrentUser }: MessageBubbleProps) => {
+const MessageBubble = ({ message, isFromCurrentUser, formatMessageTime }: MessageBubbleProps) => {
   return (
     <div className={`flex ${isFromCurrentUser ? 'justify-end' : 'justify-start'}`}>
       <div 
