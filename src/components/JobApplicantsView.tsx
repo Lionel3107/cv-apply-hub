@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, Search, Filter, Download, Calendar } from "lucide-react";
 import { Job } from "@/types/job";
 import { useApplications } from "@/hooks/use-applications";
-import { Applicant } from "@/types/applicant";
+import { Applicant, ApplicationStatus } from "@/types/applicant";
 import { ApplicantRow } from "./applicants/ApplicantRow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
@@ -24,6 +24,26 @@ import { MessageDialog } from "./applicants/MessageDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { exportApplicantsData } from "@/utils/exportUtils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface JobApplicantsViewProps {
   job: Job;
@@ -39,25 +59,82 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  // Added new state for filters
+  const [filters, setFilters] = useState<{
+    status: ApplicationStatus | '';
+    startDate: Date | null;
+    endDate: Date | null;
+    skillsFilter: string;
+  }>({
+    status: '',
+    startDate: null,
+    endDate: null,
+    skillsFilter: ''
+  });
 
   useEffect(() => {
     if (!applications) return;
     
-    const filtered = applications.filter(
-      (applicant) =>
-        applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        applicant.experience.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        applicant.skills.some((skill) =>
-          skill.toLowerCase().includes(searchTerm.toLowerCase())
+    let filtered = [...applications];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (applicant) =>
+          applicant.name.toLowerCase().includes(term) ||
+          applicant.email.toLowerCase().includes(term) ||
+          applicant.experience.toLowerCase().includes(term) ||
+          applicant.skills.some((skill) => skill.toLowerCase().includes(term))
+      );
+    }
+    
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter(applicant => applicant.action === filters.status);
+    }
+    
+    // Apply date range filters
+    if (filters.startDate) {
+      filtered = filtered.filter(applicant => 
+        new Date(applicant.appliedDate) >= filters.startDate!
+      );
+    }
+    
+    if (filters.endDate) {
+      filtered = filtered.filter(applicant => 
+        new Date(applicant.appliedDate) <= filters.endDate!
+      );
+    }
+    
+    // Apply skills filter
+    if (filters.skillsFilter) {
+      const skillsTerms = filters.skillsFilter.toLowerCase().split(',').map(s => s.trim());
+      filtered = filtered.filter(applicant => 
+        applicant.skills.some(skill => 
+          skillsTerms.some(term => skill.toLowerCase().includes(term))
         )
-    );
+      );
+    }
     
     setFilteredApplicants(filtered);
-  }, [applications, searchTerm]);
+  }, [applications, searchTerm, filters]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Already handled in the effect
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      status: '',
+      startDate: null,
+      endDate: null,
+      skillsFilter: ''
+    });
+    setSearchTerm('');
   };
 
   const handleViewProfile = (applicant: Applicant) => {
@@ -190,7 +267,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
             <CardTitle>All Applicants ({filteredApplicants.length})</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setIsFilterDialogOpen(true)}>
                 <Filter className="h-4 w-4 mr-1" />
                 Filter
               </Button>
@@ -213,6 +290,41 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
               />
             </div>
           </form>
+
+          {/* Active filters display */}
+          {(filters.status || filters.startDate || filters.endDate || filters.skillsFilter) && (
+            <div className="mb-4 flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-gray-500">Active filters:</span>
+              
+              {filters.status && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+                  Status: {filters.status}
+                </Badge>
+              )}
+              
+              {filters.startDate && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+                  From: {format(filters.startDate, 'MMM dd, yyyy')}
+                </Badge>
+              )}
+              
+              {filters.endDate && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+                  To: {format(filters.endDate, 'MMM dd, yyyy')}
+                </Badge>
+              )}
+              
+              {filters.skillsFilter && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+                  Skills: {filters.skillsFilter}
+                </Badge>
+              )}
+              
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2 text-gray-500">
+                Clear all
+              </Button>
+            </div>
+          )}
 
           {filteredApplicants.length === 0 ? (
             <div className="text-center py-12 border rounded-md bg-gray-50">
@@ -254,6 +366,109 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Filter Applicants</DialogTitle>
+            <DialogDescription>
+              Set criteria to filter applicants for {job.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="status">Application Status</Label>
+              <Select 
+                value={filters.status} 
+                onValueChange={(value: ApplicationStatus | '') => setFilters(prev => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                  <SelectItem value="interviewed">Interviewed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="hired">Hired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="dateRange">Applied Date (From)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="startDate"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !filters.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {filters.startDate ? format(filters.startDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.startDate || undefined}
+                    onSelect={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="endDate">Applied Date (To)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="endDate"
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !filters.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {filters.endDate ? format(filters.endDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.endDate || undefined}
+                    onSelect={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="skills">Skills (comma separated)</Label>
+              <Input
+                id="skills"
+                placeholder="e.g. React, TypeScript, CSS"
+                value={filters.skillsFilter}
+                onChange={(e) => setFilters(prev => ({ ...prev, skillsFilter: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={resetFilters}>
+              Reset Filters
+            </Button>
+            <Button onClick={() => setIsFilterDialogOpen(false)}>Apply Filters</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selectedApplicant && (
         <>
