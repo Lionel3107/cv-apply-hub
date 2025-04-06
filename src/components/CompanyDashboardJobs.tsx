@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2, Users, Download, Filter, Search } from "lucide-react";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -42,9 +42,8 @@ import { Switch } from "@/components/ui/switch";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import { exportJobsData } from "@/utils/exportUtils";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Event, useEvents } from "@/hooks/use-events";
+import { useEvents } from "@/hooks/use-events";
 import { Job } from "@/types/job";
 import { 
   Select,
@@ -241,54 +240,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
     toast.success("Jobs exported successfully");
   };
 
-  const openScheduleDialog = (job) => {
-    setSelectedJob(job);
-    setEventForm({
-      title: `Interview for ${job.title}`,
-      description: '',
-      type: 'interview',
-      date: new Date(),
-      isAllDay: false,
-      status: 'pending'
-    });
-    setScheduleDialogOpen(true);
-  };
-
-  const handleEventFormChange = (field, value) => {
-    setEventForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleScheduleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedJob || !profile?.id) return;
-    
-    try {
-      const { error } = await supabase
-        .from("events")
-        .insert({
-          title: eventForm.title,
-          description: eventForm.description,
-          type: eventForm.type,
-          date: eventForm.date.toISOString(),
-          is_all_day: eventForm.isAllDay,
-          status: eventForm.status,
-          user_id: profile.id,
-          related_job_id: selectedJob.id
-        });
-
-      if (error) throw error;
-        
-      toast.success(`Event "${eventForm.title}" created successfully`);
-      setScheduleDialogOpen(false);
-    } catch (error) {
-      console.error("Error creating event:", error);
-      toast.error("Failed to create event");
-    }
-  };
-
   const handleSearchChange = (e) => {
     setFilter('searchTerm', e.target.value);
   };
@@ -471,15 +422,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => openScheduleDialog(job)}
-                >
-                  <Calendar className="h-4 w-4 mr-1" />
-                  Schedule
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
                   className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                   onClick={() => handleDeleteClick(job)}
                 >
@@ -615,14 +557,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
               <Select 
-                value={filters.category} 
-                onValueChange={(value) => setFilter('category', value)}
+                value={filters.category || "all-categories"} 
+                onValueChange={(value) => setFilter('category', value === "all-categories" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all-categories">All Categories</SelectItem>
                   <SelectItem value="Technology">Technology</SelectItem>
                   <SelectItem value="Healthcare">Healthcare</SelectItem>
                   <SelectItem value="Finance">Finance</SelectItem>
@@ -638,14 +580,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="type">Job Type</Label>
               <Select 
-                value={filters.type} 
-                onValueChange={(value) => setFilter('type', value)}
+                value={filters.type || "all-types"} 
+                onValueChange={(value) => setFilter('type', value === "all-types" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select job type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all-types">All Types</SelectItem>
                   <SelectItem value="Full-time">Full-time</SelectItem>
                   <SelectItem value="Part-time">Part-time</SelectItem>
                   <SelectItem value="Contract">Contract</SelectItem>
@@ -658,14 +600,14 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             <div className="grid gap-2">
               <Label htmlFor="datePosted">Date Posted</Label>
               <Select 
-                value={filters.datePosted} 
-                onValueChange={(value) => setFilter('datePosted', value)}
+                value={filters.datePosted || "any-time"} 
+                onValueChange={(value) => setFilter('datePosted', value === "any-time" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any time" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any time</SelectItem>
+                  <SelectItem value="any-time">Any time</SelectItem>
                   <SelectItem value="today">Today</SelectItem>
                   <SelectItem value="this_week">This week</SelectItem>
                   <SelectItem value="this_month">This month</SelectItem>
@@ -678,7 +620,7 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
               <Input
                 id="location"
                 placeholder="Enter location"
-                value={filters.location}
+                value={filters.location || ""}
                 onChange={(e) => setFilter('location', e.target.value)}
               />
             </div>
@@ -717,100 +659,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
             </Button>
             <Button onClick={() => setFilterDialogOpen(false)}>Apply Filters</Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Schedule an Event</DialogTitle>
-            <DialogDescription>
-              Create a new event related to {selectedJob?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleScheduleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="event-title">Event Title</Label>
-                <Input
-                  id="event-title"
-                  value={eventForm.title}
-                  onChange={(e) => handleEventFormChange('title', e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="event-type">Event Type</Label>
-                <Select 
-                  value={eventForm.type} 
-                  onValueChange={(value) => handleEventFormChange('type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select event type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="interview">Interview</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="call">Phone Call</SelectItem>
-                    <SelectItem value="deadline">Application Deadline</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="event-date">Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !eventForm.date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {eventForm.date ? format(eventForm.date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={eventForm.date}
-                      onSelect={(date) => handleEventFormChange('date', date || new Date())}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="event-description">Description (optional)</Label>
-                <Textarea
-                  id="event-description"
-                  value={eventForm.description}
-                  onChange={(e) => handleEventFormChange('description', e.target.value)}
-                  className="h-20"
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-all-day"
-                  checked={eventForm.isAllDay}
-                  onCheckedChange={(checked) => handleEventFormChange('isAllDay', checked)}
-                />
-                <Label htmlFor="is-all-day">All-day event</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setScheduleDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Create Event</Button>
-            </DialogFooter>
-          </form>
         </DialogContent>
       </Dialog>
     </div>

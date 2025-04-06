@@ -1,26 +1,30 @@
 
-import { Applicant } from "@/types/applicant";
+import { Applicant, ApplicationStatus } from "@/types/applicant";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ApplicantActions } from "./ApplicantActions";
 
 interface ApplicantRowProps {
   applicant: Applicant;
-  onViewApplicant: (applicant: Applicant) => void;
-  onViewCoverLetter: (applicant: Applicant) => void;
-  onEditApplicant: (applicant: Applicant) => void;
-  onDeleteApplicant: (applicant: Applicant) => void;
-  onChangeAction: (applicant: Applicant, action: Applicant["action"]) => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  onStatusChange: (applicantId: string, newStatus: ApplicationStatus) => Promise<void>;
+  onDelete: (applicantId: string) => Promise<void>;
+  onViewApplicant?: (applicant: Applicant) => void;
+  onViewCoverLetter?: (applicant: Applicant) => void;
+  onEditApplicant?: (applicant: Applicant) => void;
   onMessageApplicant?: (applicant: Applicant) => void;
 }
 
 export const ApplicantRow = ({
   applicant,
+  isSelected,
+  onSelect,
+  onStatusChange,
+  onDelete,
   onViewApplicant,
   onViewCoverLetter,
   onEditApplicant,
-  onDeleteApplicant,
-  onChangeAction,
   onMessageApplicant
 }: ApplicantRowProps) => {
   const getActionBadge = (action: Applicant["action"]) => {
@@ -40,29 +44,30 @@ export const ApplicantRow = ({
     }
   };
 
+  // Create wrapper functions to match expected signatures
+  const handleStatusChange = (applicant: Applicant, action: ApplicationStatus) => {
+    return onStatusChange(applicant.id, action);
+  };
+
+  const handleDeleteApplicant = (applicant: Applicant) => {
+    return onDelete(applicant.id);
+  };
+
   return (
     <TableRow key={applicant.id}>
       <TableCell>
-        <div>
-          <div className="font-medium">{applicant.name}</div>
-          <div className="text-sm text-gray-500">{applicant.email}</div>
-        </div>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onSelect}
+          className="h-4 w-4"
+        />
       </TableCell>
-      <TableCell>{applicant.jobTitle}</TableCell>
       <TableCell>
-        <div>
-          <div className="flex flex-wrap gap-1 mb-1">
-            {applicant.skills.map((skill, index) => (
-              <Badge key={index} variant="outline" className="bg-blue-50">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-          <div className="text-xs text-gray-500">
-            Experience: {applicant.experience} | Education: {applicant.education}
-          </div>
-        </div>
+        <div className="font-medium">{applicant.name}</div>
       </TableCell>
+      <TableCell>{applicant.email}</TableCell>
+      <TableCell>{new Date(applicant.appliedDate).toLocaleDateString()}</TableCell>
       <TableCell>
         {getActionBadge(applicant.action)}
       </TableCell>
@@ -72,8 +77,8 @@ export const ApplicantRow = ({
           onViewApplicant={onViewApplicant}
           onViewCoverLetter={onViewCoverLetter}
           onEditApplicant={onEditApplicant}
-          onDeleteApplicant={onDeleteApplicant}
-          onChangeAction={onChangeAction}
+          onDeleteApplicant={handleDeleteApplicant}
+          onChangeAction={handleStatusChange}
           onMessageApplicant={onMessageApplicant}
         />
       </TableCell>

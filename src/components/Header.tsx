@@ -1,239 +1,214 @@
-
-import { useState } from 'react';
-import { Menu, X, Home, User, LogOut } from 'lucide-react';
-import { Button } from './ui/button';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { 
+  Building,
+  Menu,
+  X,
+  Search,
+  Briefcase,
+  User,
+  LogOut,
+  Home,
+  Info,
+  FileText,
+  Mail
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Logo } from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+export const Header = () => {
+  const { user, profile, isLoading } = useAuth();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Helper function to determine if a link is active
-  const isActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
-    return false;
+  useEffect(() => {
+    if (!isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile, mobileMenuOpen]);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Signed out successfully");
+    } catch (error: any) {
+      toast.error(`Error signing out: ${error.message}`);
+    }
   };
 
-  const getInitials = () => {
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const getProfileInitials = () => {
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
     }
-    return user?.email?.[0].toUpperCase() || 'U';
+    if (profile?.first_name) {
+      return profile.first_name.substring(0, 2).toUpperCase();
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
+    <header className="sticky top-0 z-40 bg-white border-b">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-brand-blue">
-            CVApplyHub
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-blue">
+            <Logo className="h-8 w-8" />
+            <span className="hidden sm:inline">JobPortal</span>
           </Link>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className={`transition-colors flex items-center ${
-                isActive('/') && !isActive('/jobs') && !isActive('/companies') && !isActive('/about')
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-            >
-              <Home size={18} className="mr-1" />
+
+          <nav className="hidden md:flex items-center space-x-1">
+            <Link to="/" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
               Home
             </Link>
-            <Link 
-              to="/jobs" 
-              className={`transition-colors ${
-                isActive('/jobs') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-            >
-              Jobs
+            <Link to="/jobs" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              Find Jobs
             </Link>
-            <Link 
-              to="/companies" 
-              className={`transition-colors ${
-                isActive('/companies') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-            >
+            <Link to="/companies" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
               Companies
             </Link>
-            <Link 
-              to="/about" 
-              className={`transition-colors ${
-                isActive('/about') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-            >
-              About
+            <Link to="/about" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              About Us
             </Link>
-            
-            {user ? (
-              <>
-                {profile?.is_employer && (
-                  <Link to="/post-job">
-                    <Button className="bg-brand-blue hover:bg-brand-darkBlue mr-2">
-                      Post a Job
-                    </Button>
-                  </Link>
-                )}
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar>
-                        <AvatarImage src={profile?.avatar_url || ''} />
-                        <AvatarFallback>{getInitials()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => 
-                      navigate(profile?.is_employer ? '/dashboard' : '/applicant-dashboard')
-                    }>
-                      <User className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <Link to="/auth">
-                <Button className="bg-brand-blue hover:bg-brand-darkBlue">
-                  Sign In
-                </Button>
+            {user && profile?.is_employer && (
+              <Link to="/post-job" className="px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                Post Job
               </Link>
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden text-gray-700"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center space-x-2">
+            {isLoading ? (
+              <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-1 h-auto rounded-full">
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarImage src={profile?.avatar_url || ""} />
+                      <AvatarFallback>{getProfileInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="p-2">
+                    <p className="text-sm font-medium">
+                      {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}` : user.email}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {profile?.is_employer ? (
+                    <Link to="/dashboard">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Building className="mr-2 h-4 w-4" />
+                        <span>Company Dashboard</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  ) : (
+                    <Link to="/applicant-dashboard">
+                      <DropdownMenuItem className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>My Dashboard</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button>Sign in</Button>
+              </Link>
+            )}
+
+            <div className="md:hidden">
+              <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 animate-fade-in">
-            <Link 
-              to="/" 
-              className={`transition-colors py-2 px-4 flex items-center ${
-                isActive('/') && !isActive('/jobs') && !isActive('/companies') && !isActive('/about')
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Home size={18} className="mr-2" />
+        {mobileMenuOpen && (
+          <nav className="md:hidden pt-4 pb-2 border-t mt-3 space-y-2">
+            <Link to="/" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Home className="mr-2 h-5 w-5" />
               Home
             </Link>
-            <Link 
-              to="/jobs" 
-              className={`transition-colors py-2 px-4 ${
-                isActive('/jobs') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Jobs
+            <Link to="/jobs" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Briefcase className="mr-2 h-5 w-5" />
+              Find Jobs
             </Link>
-            <Link 
-              to="/companies" 
-              className={`transition-colors py-2 px-4 ${
-                isActive('/companies') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
+            <Link to="/companies" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Building className="mr-2 h-5 w-5" />
               Companies
             </Link>
-            <Link 
-              to="/about" 
-              className={`transition-colors py-2 px-4 ${
-                isActive('/about') 
-                  ? 'text-brand-blue font-medium' 
-                  : 'text-gray-700 hover:text-brand-blue'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
+            <Link to="/about" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+              <Info className="mr-2 h-5 w-5" />
+              About Us
             </Link>
-            
-            {user ? (
+            {user && (
               <>
-                {profile?.is_employer && (
-                  <Link to="/post-job" onClick={() => setIsMenuOpen(false)}>
-                    <Button 
-                      className="bg-brand-blue hover:bg-brand-darkBlue mx-4 w-[calc(100%-2rem)]"
-                    >
-                      Post a Job
-                    </Button>
+                {profile?.is_employer ? (
+                  <>
+                    <Link to="/dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                      <Building className="mr-2 h-5 w-5" />
+                      Company Dashboard
+                    </Link>
+                    <Link to="/post-job" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                      <FileText className="mr-2 h-5 w-5" />
+                      Post Job
+                    </Link>
+                  </>
+                ) : (
+                  <Link to="/applicant-dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
+                    <User className="mr-2 h-5 w-5" />
+                    My Dashboard
                   </Link>
                 )}
-                
-                <Link 
-                  to={profile?.is_employer ? '/dashboard' : '/applicant-dashboard'} 
-                  className="transition-colors py-2 px-4 text-gray-700 hover:text-brand-blue"
-                  onClick={() => setIsMenuOpen(false)}
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full text-left flex items-center px-3 py-2 rounded-md hover:bg-red-50 text-red-600"
                 >
-                  <User size={18} className="inline mr-2" />
-                  Dashboard
-                </Link>
-                
-                <button
-                  onClick={() => {
-                    handleSignOut();
-                    setIsMenuOpen(false);
-                  }}
-                  className="text-left transition-colors py-2 px-4 text-gray-700 hover:text-brand-blue w-full"
-                >
-                  <LogOut size={18} className="inline mr-2" />
+                  <LogOut className="mr-2 h-5 w-5" />
                   Sign out
                 </button>
               </>
-            ) : (
-              <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                <Button 
-                  className="bg-brand-blue hover:bg-brand-darkBlue mx-4 w-[calc(100%-2rem)]"
-                >
-                  Sign In
-                </Button>
-              </Link>
             )}
           </nav>
         )}
@@ -241,5 +216,3 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;

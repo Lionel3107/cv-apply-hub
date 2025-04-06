@@ -5,6 +5,7 @@ export interface Applicant {
   id: string;
   name: string;
   email: string;
+  userId?: string;
   jobTitle: string;
   appliedDate: string;
   resumeUrl: string;
@@ -13,10 +14,14 @@ export interface Applicant {
   experience: string;
   education: string;
   coverLetter: string;
-  phone?: string;
-  userId?: string; // Add userId for messaging functionality
   companyName?: string;
   companyLogo?: string;
+  phone?: string;
+}
+
+export interface ApplicantWithScore extends Applicant {
+  score: number;
+  avatar?: string;
 }
 
 export interface ApplicantApplication {
@@ -27,15 +32,12 @@ export interface ApplicantApplication {
   companyLogo?: string;
   appliedDate: string;
   status: ApplicationStatus;
-  statusUpdates: {
-    status: ApplicationStatus;
-    date: string;
-  }[];
+  statusUpdates: { status: ApplicationStatus; date: string }[];
   feedback: string | null;
   nextSteps: string | null;
 }
 
-export interface ApplicantWithScore extends Applicant {
-  score: number;
-  avatar?: string;
+export interface StatusUpdate {
+  status: ApplicationStatus;
+  date: string;
 }

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import JobCard from "@/components/JobCard";
 import { Input } from "@/components/ui/input";

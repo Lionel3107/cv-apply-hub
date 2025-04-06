@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApplicantDashboardApplications } from "@/components/applicant/ApplicantDashboardApplications";

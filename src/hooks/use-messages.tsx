@@ -87,11 +87,13 @@ export const useMessages = (applicationId?: string) => {
           event: "*",
           schema: "public",
           table: "messages",
-          filter: `sender_id=eq.${user.id}:recipient_id=eq.${user.id}`,
+          filter: applicationId 
+            ? `related_application_id=eq.${applicationId}` 
+            : `sender_id=eq.${user.id}:recipient_id=eq.${user.id}`
         },
-        () => {
-          // Refetch messages when we receive a real-time update
-          fetchMessages();
+        (payload) => {
+          console.log("Realtime message update:", payload);
+          fetchMessages(); // Refetch all messages when we receive an update
         }
       )
       .subscribe();
