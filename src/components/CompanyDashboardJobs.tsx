@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Users, Download, Calendar, Filter, Search } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Users, Download, Filter, Search } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -41,7 +41,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import { exportJobsData } from "@/utils/exportUtils";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -92,7 +91,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
     
     let filtered = [...jobs];
     
-    // Apply search filter
     if (filters.searchTerm) {
       const searchTerm = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(job => 
@@ -102,36 +100,29 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
       );
     }
     
-    // Apply category filter
     if (filters.category) {
       filtered = filtered.filter(job => job.category === filters.category);
     }
     
-    // Apply type filter
     if (filters.type) {
       filtered = filtered.filter(job => job.type === filters.type);
     }
     
-    // Apply location filter
     if (filters.location) {
       filtered = filtered.filter(job => job.location.includes(filters.location));
     }
     
-    // Apply remote filter
     if (filters.isRemote !== null) {
       filtered = filtered.filter(job => job.isRemote === filters.isRemote);
     }
     
-    // Apply featured filter
     if (filters.featured !== undefined) {
       filtered = filtered.filter(job => job.featured === filters.featured);
     }
     
-    // Apply date posted filter
     if (filters.datePosted) {
       const now = new Date();
       
-      // Convert string filter to actual date logic
       switch (filters.datePosted) {
         case 'today':
           const today = new Date(now.setHours(0, 0, 0, 0));
@@ -501,7 +492,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         </div>
       )}
 
-      {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -519,7 +509,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
@@ -614,7 +603,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Filter Dialog */}
       <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -732,7 +720,6 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Schedule Dialog */}
       <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>

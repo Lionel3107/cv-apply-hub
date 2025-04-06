@@ -21,4 +21,5 @@ export interface Job {
     phone?: string;
     description?: string;
   };
+  applicationCount?: number; // Add this property for export functionality
 }
