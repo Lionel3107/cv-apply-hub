@@ -20,8 +20,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
 import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
 import { DeleteApplicantDialog } from "./applicants/DeleteApplicantDialog";
+import { MessageDialog } from "./applicants/MessageDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { exportApplicantsData } from "@/utils/exportUtils";
 
 interface JobApplicantsViewProps {
   job: Job;
@@ -36,6 +38,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!applications) return;
@@ -65,6 +68,11 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const handleViewCoverLetter = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsCoverLetterOpen(true);
+  };
+
+  const handleMessageApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsMessageDialogOpen(true);
   };
 
   const handleDeleteClick = (applicant: Applicant) => {
@@ -111,6 +119,11 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
       console.error("Error updating application status:", err);
       toast.error("Failed to update status");
     }
+  };
+
+  const handleExportApplicants = () => {
+    exportApplicantsData(filteredApplicants, job.title);
+    toast.success(`Applicants for "${job.title}" exported successfully`);
   };
 
   if (isLoading) {
@@ -181,13 +194,9 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                 <Filter className="h-4 w-4 mr-1" />
                 Filter
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportApplicants}>
                 <Download className="h-4 w-4 mr-1" />
                 Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-1" />
-                Schedule
               </Button>
             </div>
           </div>
@@ -236,6 +245,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
                       onEditApplicant={() => {}}
                       onDeleteApplicant={handleDeleteClick}
                       onChangeAction={handleChangeAction}
+                      onMessageApplicant={handleMessageApplicant}
                     />
                   ))}
                 </TableBody>
@@ -262,6 +272,11 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             open={isDeleteDialogOpen}
             onOpenChange={setIsDeleteDialogOpen}
             onConfirm={handleDeleteConfirm}
+          />
+          <MessageDialog
+            applicant={selectedApplicant}
+            open={isMessageDialogOpen}
+            onOpenChange={setIsMessageDialogOpen}
           />
         </>
       )}

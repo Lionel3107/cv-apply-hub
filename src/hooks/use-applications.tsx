@@ -81,6 +81,7 @@ export const useApplications = (jobId?: string) => {
           id: app.id,
           name: app.name,
           email: app.email,
+          userId: app.user_id, // Include userId for messaging
           jobTitle: app.jobs?.title || "Unknown Position",
           appliedDate: app.applied_date,
           resumeUrl: app.resume_url || "",
@@ -91,6 +92,7 @@ export const useApplications = (jobId?: string) => {
           coverLetter: app.cover_letter || "",
           companyName: app.jobs?.companies?.name || "Unknown Company",
           companyLogo: app.jobs?.companies?.logo_url,
+          phone: app.phone,
         }));
 
         setApplications(transformedApplications);

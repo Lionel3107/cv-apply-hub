@@ -39,6 +39,19 @@ export const ApplicantActions = ({
   onChangeAction,
   onMessageApplicant
 }: ApplicantActionsProps) => {
+  const handleDownloadResume = () => {
+    if (applicant.resumeUrl) {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = applicant.resumeUrl;
+      link.setAttribute('download', `${applicant.name.replace(/\s+/g, '_')}_resume.pdf`);
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="flex justify-end gap-1">
       <Button variant="outline" size="sm" onClick={() => onViewApplicant(applicant)}>
@@ -62,7 +75,13 @@ export const ApplicantActions = ({
           <MessageSquare className="h-4 w-4" />
         </Button>
       )}
-      <Button variant="outline" size="sm">
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={handleDownloadResume}
+        disabled={!applicant.resumeUrl}
+        className={!applicant.resumeUrl ? "opacity-50 cursor-not-allowed" : ""}
+      >
         <Download className="h-4 w-4" />
       </Button>
       
