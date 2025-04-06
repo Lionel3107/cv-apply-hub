@@ -26,8 +26,9 @@ export const DeleteApplicantDialog = ({
 }: DeleteApplicantDialogProps) => {
   if (!applicant) return null;
 
-  const handleConfirm = () => {
-    onConfirmDelete(applicant.id);
+  const handleConfirm = async () => {
+    await onConfirmDelete(applicant.id);
+    onOpenChange(false);
   };
 
   return (
