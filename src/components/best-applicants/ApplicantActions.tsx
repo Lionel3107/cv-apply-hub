@@ -16,7 +16,7 @@ export const ApplicantActions: React.FC<ApplicantActionsProps> = ({
   onViewProfile,
   onViewCoverLetter
 }) => {
-  const handleDownloadCV = () => {
+  const handleDownloadCV = (applicant: ApplicantWithScore) => {
     if (applicant.resumeUrl) {
       window.open(applicant.resumeUrl, '_blank');
     } else {
