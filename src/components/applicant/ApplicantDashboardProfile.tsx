@@ -10,16 +10,16 @@ import { toast } from "sonner";
 
 export const ApplicantDashboardProfile = () => {
   const [formData, setFormData] = useState({
-    fullName: "John Doe",
-    email: "johndoe@example.com",
-    phone: "+1 123 456 7890",
-    location: "New York, USA",
-    title: "Frontend Developer",
-    about: "Passionate frontend developer with 5 years of experience building modern web applications.",
+    fullName: "Kabore Lionel",
+    email: "dimkoff@gmail.com",
+    phone: "+226 75 15 66 88",
+    location: "Ouagadougou, Burkina Faso",
+    title: "Full Stack Developer",
+    about: "Passionate full stack developer with 5 years of experience building modern web applications.",
     profilePictureUrl: "",
-    website: "https://johndoe.com",
-    linkedin: "https://linkedin.com/in/johndoe",
-    github: "https://github.com/johndoe"
+    website: "https://dimkoff.com",
+    linkedin: "https://linkedin.com/in/dimkoff",
+    github: "https://github.com/lionel3107"
   });
 
   const handleInputChange = (e) => {
