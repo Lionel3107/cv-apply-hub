@@ -45,7 +45,7 @@ export const ApplicantActions: React.FC<ApplicantActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => handleDownloadCV(applicant)}
+        onClick={handleDownloadCV}
       >
         <Download className="h-4 w-4 mr-1" />
         CV
