@@ -85,7 +85,7 @@ export const ApplicantProfileDialog = ({
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="resume">Resume</TabsTrigger>
-            {/* <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger> */}
+            <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger>
           </TabsList>
           
           <ScrollArea className="flex-grow pr-4">

@@ -80,7 +80,7 @@ export const Header = () => {
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-blue">
             <Logo className="h-8 w-8" />
-            <span className="hidden sm:inline">Dimkoff</span>
+            <span className="hidden sm:inline">JobPortal</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-1">

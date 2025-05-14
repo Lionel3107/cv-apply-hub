@@ -240,7 +240,7 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
                   <FormControl>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input placeholder="e.g. Ouagadougou, Pissy" className="pl-10" {...field} />
+                      <Input placeholder="e.g. New York, NY" className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -257,7 +257,7 @@ export function PostJobForm({ onJobPosted }: PostJobFormProps) {
                   <FormControl>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <Input placeholder="e.g. 80.000 CFA - 100,000 CFA" className="pl-10" {...field} />
+                      <Input placeholder="e.g. $80,000 - $100,000" className="pl-10" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
