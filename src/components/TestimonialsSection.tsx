@@ -1,32 +1,38 @@
 
-import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 import { Quote } from "lucide-react";
 
 const testimonials = [
   {
     id: 1,
-    content: "This platform helped me land my dream job at a top tech company within just 2 weeks of applying. The process was seamless and the interface is incredibly user-friendly.",
+    content: "This platform has revolutionized our hiring process. We've reduced our time-to-hire by 40% and found incredibly talented candidates that our old methods would have missed.",
     name: "Alex Morgan",
-    position: "Software Engineer",
+    position: "Head of Talent",
     company: "TechGiant Inc.",
     avatar: null,
   },
   {
     id: 2,
-    content: "As a hiring manager, I've found exceptional talent through this platform. The quality of candidates and the filtering tools make recruitment so much easier.",
+    content: "As a hiring manager, I've found exceptional talent through this platform. The AI-powered ranking system has been incredibly accurate at identifying the best matches for our team.",
     name: "Sarah Chen",
-    position: "HR Manager",
+    position: "HR Director",
     company: "InnovateCorp",
     avatar: null,
   },
   {
     id: 3,
-    content: "After struggling for months on other job platforms, I found my perfect role within days. The category filters and company profiles gave me all the information I needed.",
+    content: "After struggling for months on other job platforms, I found my perfect role within days. The CV enhancement tool helped me highlight my skills in a way that really stood out to employers.",
     name: "Michael Patel",
-    position: "Product Manager",
+    position: "Senior Developer",
     company: "FutureWorks",
     avatar: null,
   },
@@ -34,28 +40,40 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-24 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">What People Say</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Hear from job seekers and employers who have successfully used our platform
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Trusted by Industry Leaders</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Hear from recruiters and job seekers who have transformed their hiring and job search experience
           </p>
-        </div>
+        </motion.div>
         
-        <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="max-w-5xl mx-auto"
+        >
           <Carousel className="w-full">
             <CarouselContent>
               {testimonials.map((testimonial) => (
-                <CarouselItem key={testimonial.id}>
-                  <Card className="border-none shadow-lg mx-4">
-                    <CardContent className="p-8">
+                <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/2 pl-4 pr-4">
+                  <Card className="border-none shadow-lg h-full">
+                    <CardContent className="p-8 h-full flex flex-col">
                       <div className="flex justify-center mb-6">
                         <div className="bg-brand-blue p-3 rounded-full">
                           <Quote size={24} className="text-white" />
                         </div>
                       </div>
-                      <p className="text-gray-700 text-center text-lg mb-6">{testimonial.content}</p>
+                      <p className="text-gray-700 text-center text-lg mb-8 flex-grow">{testimonial.content}</p>
                       <div className="flex flex-col items-center">
                         <Avatar className="h-16 w-16 mb-3">
                           {testimonial.avatar ? (
@@ -81,7 +99,7 @@ const TestimonialsSection = () => {
               <CarouselNext className="-right-6 border-gray-200" />
             </div>
           </Carousel>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
