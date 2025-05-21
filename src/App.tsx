@@ -19,6 +19,7 @@ import PostJob from "./pages/PostJob";
 import Dashboard from "./pages/Dashboard";
 import ApplicantDashboard from "./pages/ApplicantDashboard";
 import Auth from "./pages/Auth";
+import CompanySignup from "./pages/CompanySignup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/application-success" element={<ApplicationSuccess />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/company-signup" element={<CompanySignup />} />
           
           {/* Protected Routes */}
           <Route path="/post-job" element={
