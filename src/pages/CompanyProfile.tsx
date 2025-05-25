@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building, MapPin, Mail, Phone, Globe, ArrowLeft, 
-  Briefcase, Calendar, Users, Edit, Loader2 
+  Briefcase, Calendar, Users, Edit, Loader2, Camera 
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +32,7 @@ const CompanyProfile = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   
   const isOwner = user && profile?.company_id === id;
   
@@ -78,6 +78,36 @@ const CompanyProfile = () => {
       setLogoPreview(URL.createObjectURL(file));
     }
   };
+
+  const uploadLogo = async (): Promise<string | null> => {
+    if (!logoFile || !company) return null;
+
+    setIsUploadingLogo(true);
+    try {
+      const fileExt = logoFile.name.split('.').pop();
+      const fileName = `${company.id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `company-logos/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(filePath, logoFile);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: publicURL } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(filePath);
+        
+      return publicURL.publicUrl;
+    } catch (error: any) {
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
+      return null;
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,23 +120,8 @@ const CompanyProfile = () => {
       let logoUrl = company.logo;
       
       if (logoFile) {
-        // Upload new logo to storage
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `company-logos/${fileName}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('logos')
-          .upload(filePath, logoFile);
-          
-        if (uploadError) throw uploadError;
-        
-        // Get public URL
-        const { data: publicURL } = supabase.storage
-          .from('logos')
-          .getPublicUrl(filePath);
-          
-        logoUrl = publicURL.publicUrl;
+        logoUrl = await uploadLogo();
+        if (!logoUrl) return; // Upload failed
       }
       
       const { error } = await supabase
@@ -126,6 +141,7 @@ const CompanyProfile = () => {
       
       toast.success("Company profile updated successfully");
       setIsEditing(false);
+      setLogoFile(null);
     } catch (error: any) {
       console.error("Error updating company profile:", error);
       toast.error(error.message || "Failed to update company profile");
@@ -163,7 +179,7 @@ const CompanyProfile = () => {
                     <form onSubmit={handleSubmit} className="p-8">
                       <div className="flex flex-col md:flex-row gap-8">
                         <div className="w-full md:w-64 flex flex-col items-center">
-                          <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-4">
+                          <div className="relative w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-4 group">
                             {logoPreview ? (
                               <img 
                                 src={logoPreview} 
@@ -173,20 +189,25 @@ const CompanyProfile = () => {
                             ) : (
                               <Building className="h-16 w-16 text-gray-400" />
                             )}
+                            {isUploadingLogo && (
+                              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                <Loader2 className="h-8 w-8 animate-spin text-white" />
+                              </div>
+                            )}
+                            <label htmlFor="logo-upload" className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center cursor-pointer transition-all opacity-0 group-hover:opacity-100">
+                              <Camera className="h-8 w-8 text-white" />
+                            </label>
                           </div>
-                          <label htmlFor="logo-upload" className="cursor-pointer">
-                            <Button type="button" variant="outline" size="sm">
-                              Change Logo
-                            </Button>
-                            <input
-                              id="logo-upload"
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleLogoChange}
-                            />
-                          </label>
-                          <p className="text-xs text-gray-500 mt-2">
+                          <input
+                            id="logo-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleLogoChange}
+                            disabled={isUploadingLogo}
+                          />
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Click to upload logo<br />
                             Recommended: 400x400px (max 2MB)
                           </p>
                         </div>
@@ -194,7 +215,7 @@ const CompanyProfile = () => {
                         <div className="flex-1 space-y-6">
                           <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                              Company Name
+                              Company Name *
                             </label>
                             <input
                               id="name"
@@ -218,6 +239,7 @@ const CompanyProfile = () => {
                               onChange={handleChange}
                               rows={4}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue"
+                              placeholder="Tell applicants about your company, mission, and values..."
                             />
                           </div>
                           
@@ -233,6 +255,7 @@ const CompanyProfile = () => {
                                 value={formData.website}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue"
+                                placeholder="https://yourcompany.com"
                               />
                             </div>
                             
@@ -247,12 +270,13 @@ const CompanyProfile = () => {
                                 value={formData.location}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue"
+                                placeholder="e.g., San Francisco, CA"
                               />
                             </div>
                             
                             <div>
                               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email
+                                Contact Email
                               </label>
                               <input
                                 id="email"
@@ -261,12 +285,13 @@ const CompanyProfile = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue"
+                                placeholder="contact@yourcompany.com"
                               />
                             </div>
                             
                             <div>
                               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone
+                                Phone Number
                               </label>
                               <input
                                 id="phone"
@@ -275,6 +300,7 @@ const CompanyProfile = () => {
                                 value={formData.phone}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-blue focus:border-brand-blue"
+                                placeholder="+1 (555) 123-4567"
                               />
                             </div>
                           </div>
@@ -284,10 +310,11 @@ const CompanyProfile = () => {
                               type="button" 
                               variant="outline" 
                               onClick={() => setIsEditing(false)}
+                              disabled={isSaving}
                             >
                               Cancel
                             </Button>
-                            <Button type="submit" disabled={isSaving}>
+                            <Button type="submit" disabled={isSaving || isUploadingLogo}>
                               {isSaving ? "Saving..." : "Save Changes"}
                             </Button>
                           </div>
@@ -447,7 +474,43 @@ const CompanyProfile = () => {
                           </p>
                         )}
                         
-                        {/* We could add more company information here in the future */}
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 mb-2">Contact Information</h4>
+                            <div className="space-y-2">
+                              {company.email && (
+                                <div className="flex items-center text-gray-600">
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  <span>{company.email}</span>
+                                </div>
+                              )}
+                              {company.phone && (
+                                <div className="flex items-center text-gray-600">
+                                  <Phone className="h-4 w-4 mr-2" />
+                                  <span>{company.phone}</span>
+                                </div>
+                              )}
+                              {company.website && (
+                                <div className="flex items-center text-gray-600">
+                                  <Globe className="h-4 w-4 mr-2" />
+                                  <a href={company.website} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue">
+                                    {company.website.replace(/^https?:\/\//, '')}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {company.location && (
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Location</h4>
+                              <div className="flex items-center text-gray-600">
+                                <MapPin className="h-4 w-4 mr-2" />
+                                <span>{company.location}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
