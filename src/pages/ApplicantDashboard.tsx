@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApplicantDashboardFeedback } from "@/components/applicant/ApplicantDashboardFeedback";
 import { ApplicantDashboardLinkedInImport } from "@/components/applicant/ApplicantDashboardLinkedInImport";
 import { ApplicantDashboardInterviews } from "@/components/applicant/ApplicantDashboardInterviews";
+import { ApplicantDashboardMessages } from "@/components/applicant/ApplicantDashboardMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -47,6 +48,7 @@ const ApplicantDashboard = () => {
             <Tabs defaultValue="applications" onValueChange={setActiveTab}>
               <TabsList className="mb-8 flex flex-wrap">
                 <TabsTrigger value="applications">My Applications</TabsTrigger>
+                <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="interviews">Interviews & Recommendations</TabsTrigger>
                 <TabsTrigger value="cv-generator">CV Generator</TabsTrigger>
                 <TabsTrigger value="linkedin-import">LinkedIn Import</TabsTrigger>
@@ -55,6 +57,9 @@ const ApplicantDashboard = () => {
               </TabsList>
               <TabsContent value="applications" className="animate-fade-in">
                 <ApplicantDashboardApplications />
+              </TabsContent>
+              <TabsContent value="messages" className="animate-fade-in">
+                <ApplicantDashboardMessages />
               </TabsContent>
               <TabsContent value="interviews" className="animate-fade-in">
                 <ApplicantDashboardInterviews />

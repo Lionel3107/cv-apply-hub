@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Table,
@@ -15,14 +14,18 @@ import { Eye, FileText, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ApplicationDetailsDialog } from "./ApplicationDetailsDialog";
+import { ConversationView } from "./ConversationView";
 import { ApplicationStatus } from "@/types/applicant";
 import { useUserApplications } from "@/hooks/use-applications";
+import { useMessages } from "@/hooks/use-messages";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const ApplicantDashboardApplications = () => {
   const { applications, isLoading, error } = useUserApplications();
+  const { messages } = useMessages();
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
   const getStatusBadge = (status: ApplicationStatus) => {
     switch (status) {
@@ -46,9 +49,26 @@ export const ApplicantDashboardApplications = () => {
     setDetailsOpen(true);
   };
 
-  const handleContactEmployer = (application) => {
-    toast.info(`Contact functionality will be implemented soon for ${application.companyName}`);
+  const handleViewMessages = (application) => {
+    // Find messages related to this application
+    const applicationMessages = messages.filter(m => m.relatedApplicationId === application.id);
+    if (applicationMessages.length > 0) {
+      setSelectedConversation(application.id);
+    } else {
+      toast.info("No messages found for this application");
+    }
   };
+
+  if (selectedConversation) {
+    const applicationMessages = messages.filter(m => m.relatedApplicationId === selectedConversation);
+    return (
+      <ConversationView
+        conversationId={selectedConversation}
+        messages={applicationMessages}
+        onBack={() => setSelectedConversation(null)}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -106,38 +126,51 @@ export const ApplicantDashboardApplications = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {applications.map((application) => (
-                    <TableRow key={application.id}>
-                      <TableCell>
-                        <div className="font-medium">{application.jobTitle}</div>
-                      </TableCell>
-                      <TableCell>{application.companyName}</TableCell>
-                      <TableCell>
-                        {new Date(application.appliedDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(application.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewDetails(application)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Details
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleContactEmployer(application)}
-                          >
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            Contact
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {applications.map((application) => {
+                    const hasMessages = messages.some(m => m.relatedApplicationId === application.id);
+                    const unreadMessages = messages.filter(m => 
+                      m.relatedApplicationId === application.id && !m.isRead
+                    ).length;
+                    
+                    return (
+                      <TableRow key={application.id}>
+                        <TableCell>
+                          <div className="font-medium">{application.jobTitle}</div>
+                        </TableCell>
+                        <TableCell>{application.companyName}</TableCell>
+                        <TableCell>
+                          {new Date(application.appliedDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(application.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDetails(application)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Details
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewMessages(application)}
+                              className={hasMessages ? "border-brand-blue" : ""}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              Messages
+                              {unreadMessages > 0 && (
+                                <Badge variant="secondary" className="ml-1 bg-brand-blue text-white">
+                                  {unreadMessages}
+                                </Badge>
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
