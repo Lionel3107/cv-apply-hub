@@ -92,9 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear local state first
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      
+      // Then attempt to sign out from Supabase
+      // This will work even if there's no active session
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if signOut fails, we've already cleared the local state
+      // so the user will appear signed out in the UI
     }
   };
 
