@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -28,11 +29,13 @@ import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
 
 export const Header = () => {
   const { user, profile, isLoading } = useAuth();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const unreadCount = useUnreadMessages();
 
   useEffect(() => {
     if (!isMobile && mobileMenuOpen) {
@@ -104,6 +107,23 @@ export const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-2">
+            {/* Message notification for companies */}
+            {user && profile?.is_employer && (
+              <Link to="/dashboard">
+                <Button variant="ghost" size="icon" className="relative">
+                  <Mail className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
+
             {isLoading ? (
               <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
             ) : user ? (
@@ -129,6 +149,11 @@ export const Header = () => {
                       <DropdownMenuItem className="cursor-pointer">
                         <Building className="mr-2 h-4 w-4" />
                         <span>Company Dashboard</span>
+                        {unreadCount > 0 && (
+                          <Badge variant="secondary" className="ml-auto">
+                            {unreadCount}
+                          </Badge>
+                        )}
                       </DropdownMenuItem>
                     </Link>
                   ) : (
@@ -189,6 +214,11 @@ export const Header = () => {
                     <Link to="/dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
                       <Building className="mr-2 h-5 w-5" />
                       Company Dashboard
+                      {unreadCount > 0 && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </Link>
                     <Link to="/post-job" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
                       <FileText className="mr-2 h-5 w-5" />
