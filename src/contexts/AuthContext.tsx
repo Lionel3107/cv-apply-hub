@@ -7,6 +7,10 @@ type Profile = {
   id: string;
   first_name: string | null;
   last_name: string | null;
+  email: string;
+  phone: string | null;
+  location: string | null;
+  bio: string | null;
   is_employer: boolean;
   company_id: string | null;
   avatar_url: string | null;
@@ -70,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Fetching profile for user:", userId);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, is_employer, company_id, avatar_url')
+        .select('id, first_name, last_name, email, phone, location, bio, is_employer, company_id, avatar_url')
         .eq('id', userId)
         .single();
 
