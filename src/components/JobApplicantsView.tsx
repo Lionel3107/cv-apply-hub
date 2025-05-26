@@ -27,9 +27,6 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const { applications, isLoading, error } = useApplications(job.id);
   
   // Then use the management hook with the fetched data
-  const applicantManagement = useApplicantManagement(applications);
-  
-  // Destructure the hook properties properly
   const {
     selectedApplicants,
     selectAll,
@@ -37,6 +34,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    date,
+    setDate,
     toggleSelectAll,
     toggleApplicantSelection,
     filteredApplicants,
@@ -45,7 +44,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     handleViewApplicant,
     handleViewCoverLetter,
     handleMessageApplicant
-  } = applicantManagement;
+  } = useApplicantManagement(applications);
 
   const unreadCountsByApplication = useUnreadMessagesByApplication();
 
@@ -121,15 +120,18 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         <CardContent className="space-y-4">
           <ApplicantFilters
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            setSearchTerm={setSearchTerm}
             statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            setStatusFilter={setStatusFilter}
+            date={date}
+            setDate={setDate}
+            onExport={mockExportApplicants}
           />
           
           <Separator />
           
           <ApplicantActions
-            selectedCount={selectedApplicants.length}
+            selectedApplicants={selectedApplicants}
             onBulkStatusUpdate={mockBulkUpdateStatus}
             onBulkDelete={mockBulkDeleteApplicants}
             onExport={mockExportApplicants}
@@ -178,8 +180,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
       <DeleteApplicantDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        onConfirm={confirmDeleteApplicant}
-        applicantName={selectedApplicant?.name || ""}
+        applicant={selectedApplicant}
+        onConfirmDelete={confirmDeleteApplicant}
       />
     </div>
   );

@@ -61,6 +61,7 @@ export const useBestApplicants = () => {
               experience,
               skills,
               score,
+              status,
               applied_date,
               jobs (
                 id,
@@ -86,7 +87,8 @@ export const useBestApplicants = () => {
             jobTitle: job.title,
             appliedDate: app.applied_date,
             resumeUrl: app.resume_url || "",
-            action: "new", // Default status
+            status: app.status || "new",
+            action: app.status || "new",
             skills: app.skills || [],
             experience: app.experience || "",
             education: app.education || "",
