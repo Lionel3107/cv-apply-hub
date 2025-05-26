@@ -85,6 +85,7 @@ export const useApplications = (jobId?: string) => {
           jobTitle: app.jobs?.title || "Unknown Position",
           appliedDate: app.applied_date,
           resumeUrl: app.resume_url || "",
+          status: validateApplicationStatus(app.status), // Add the status field
           action: validateApplicationStatus(app.status),
           skills: app.skills || [],
           experience: app.experience || "",

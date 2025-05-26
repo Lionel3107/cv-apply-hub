@@ -4,6 +4,7 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useApplications } from "@/hooks/use-applications";
 import { useApplicantManagement } from "@/hooks/use-applicant-management";
 import { useUnreadMessagesByApplication } from "@/hooks/use-unread-messages-by-application";
 import { ApplicantsTable } from "@/components/applicants/ApplicantsTable";
@@ -22,27 +23,28 @@ interface JobApplicantsViewProps {
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
-  const applicantManagement = useApplicantManagement(job.id);
+  // First fetch the applications data
+  const { applications, isLoading, error } = useApplications(job.id);
+  
+  // Then use the management hook with the fetched data
+  const applicantManagement = useApplicantManagement(applications);
   
   // Destructure the hook properties properly
   const {
-    applicants,
-    filteredApplicants,
-    isLoading,
-    error,
     selectedApplicants,
     selectAll,
     searchTerm,
-    statusFilter,
     setSearchTerm,
+    statusFilter,
     setStatusFilter,
     toggleSelectAll,
     toggleApplicantSelection,
-    updateApplicantStatus,
-    deleteApplicant,
-    bulkUpdateStatus,
-    bulkDeleteApplicants,
-    exportApplicants
+    filteredApplicants,
+    handleStatusChange,
+    handleDeleteApplicant,
+    handleViewApplicant,
+    handleViewCoverLetter,
+    handleMessageApplicant
   } = applicantManagement;
 
   const unreadCountsByApplication = useUnreadMessagesByApplication();
@@ -53,32 +55,45 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const handleViewApplicant = (applicant: Applicant) => {
+  const handleViewApplicantWrapper = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsProfileOpen(true);
   };
 
-  const handleViewCoverLetter = (applicant: Applicant) => {
+  const handleViewCoverLetterWrapper = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsCoverLetterOpen(true);
   };
 
-  const handleMessageApplicant = (applicant: Applicant) => {
+  const handleMessageApplicantWrapper = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsMessageOpen(true);
   };
 
-  const handleDeleteApplicant = (applicant: Applicant) => {
+  const handleDeleteApplicantWrapper = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsDeleteOpen(true);
   };
 
   const confirmDeleteApplicant = async () => {
     if (selectedApplicant) {
-      await deleteApplicant(selectedApplicant.id);
+      await handleDeleteApplicant(selectedApplicant.id);
       setIsDeleteOpen(false);
       setSelectedApplicant(null);
     }
+  };
+
+  // Mock functions for features not yet implemented
+  const mockBulkUpdateStatus = async () => {
+    console.log("Bulk status update not implemented yet");
+  };
+
+  const mockBulkDeleteApplicants = async () => {
+    console.log("Bulk delete not implemented yet");
+  };
+
+  const mockExportApplicants = async () => {
+    console.log("Export not implemented yet");
   };
 
   return (
@@ -115,9 +130,9 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
           
           <ApplicantActions
             selectedCount={selectedApplicants.length}
-            onBulkStatusUpdate={bulkUpdateStatus}
-            onBulkDelete={bulkDeleteApplicants}
-            onExport={exportApplicants}
+            onBulkStatusUpdate={mockBulkUpdateStatus}
+            onBulkDelete={mockBulkDeleteApplicants}
+            onExport={mockExportApplicants}
           />
 
           <ApplicantsTable
@@ -128,14 +143,14 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             selectAll={selectAll}
             onToggleSelectAll={toggleSelectAll}
             onToggleApplicantSelection={toggleApplicantSelection}
-            onStatusChange={updateApplicantStatus}
+            onStatusChange={handleStatusChange}
             onDeleteApplicant={async (id) => {
-              const applicant = applicants.find(a => a.id === id);
-              if (applicant) handleDeleteApplicant(applicant);
+              const applicant = applications.find(a => a.id === id);
+              if (applicant) handleDeleteApplicantWrapper(applicant);
             }}
-            onViewApplicant={handleViewApplicant}
-            onViewCoverLetter={handleViewCoverLetter}
-            onMessageApplicant={handleMessageApplicant}
+            onViewApplicant={handleViewApplicantWrapper}
+            onViewCoverLetter={handleViewCoverLetterWrapper}
+            onMessageApplicant={handleMessageApplicantWrapper}
             unreadCountsByApplication={unreadCountsByApplication}
           />
         </CardContent>
