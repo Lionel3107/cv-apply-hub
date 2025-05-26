@@ -1,84 +1,120 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
+import React, { useState } from "react";
 import { Job } from "@/types/job";
-import { useApplications } from "@/hooks/use-applications";
-import { ApplicantProfileDialog } from "./applicants/ApplicantProfileDialog";
-import { CoverLetterDialog } from "./applicants/CoverLetterDialog";
-import { DeleteApplicantDialog } from "./applicants/DeleteApplicantDialog";
-import { MessageDialog } from "./applicants/MessageDialog";
-import { exportApplicantsData } from "@/utils/exportUtils";
-import { toast } from "sonner";
-import { ApplicantFilters } from "./applicants/ApplicantFilters";
-import { ApplicantsTable } from "./applicants/ApplicantsTable";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApplicantManagement } from "@/hooks/use-applicant-management";
+import { useUnreadMessagesByApplication } from "@/hooks/use-unread-messages-by-application";
+import { ApplicantsTable } from "@/components/applicants/ApplicantsTable";
+import { ApplicantActions } from "@/components/applicants/ApplicantActions";
+import { ApplicantFilters } from "@/components/applicants/ApplicantFilters";
+import { ApplicantProfileDialog } from "@/components/applicants/ApplicantProfileDialog";
+import { CoverLetterDialog } from "@/components/applicants/CoverLetterDialog";
+import { MessageDialog } from "@/components/applicants/MessageDialog";
+import { DeleteApplicantDialog } from "@/components/applicants/DeleteApplicantDialog";
+import { Applicant } from "@/types/applicant";
+import { Separator } from "@/components/ui/separator";
 
 interface JobApplicantsViewProps {
   job: Job;
   onBack: () => void;
 }
 
-export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBack }) => {
-  const { applications, isLoading, error } = useApplications(job.id);
-  
+export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const {
+    applicants,
+    filteredApplicants,
+    isLoading,
+    error,
     selectedApplicants,
     selectAll,
     searchTerm,
-    setSearchTerm,
     statusFilter,
+    setSearchTerm,
     setStatusFilter,
-    date,
-    setDate,
-    selectedApplicant,
-    isProfileOpen,
-    setIsProfileOpen,
-    isCoverLetterOpen,
-    setIsCoverLetterOpen,
-    isDeleteOpen,
-    setIsDeleteOpen,
-    isMessageOpen,
-    setIsMessageOpen,
-    filteredApplicants,
-    handleStatusChange,
-    handleDeleteApplicant,
-    toggleApplicantSelection,
     toggleSelectAll,
-    handleViewApplicant,
-    handleViewCoverLetter,
-    handleMessageApplicant
-  } = useApplicantManagement(applications);
+    toggleApplicantSelection,
+    updateApplicantStatus,
+    deleteApplicant,
+    bulkUpdateStatus,
+    bulkDeleteApplicants,
+    exportApplicants
+  } = useApplicantManagement(job.id);
 
-  const handleExport = () => {
-    if (applications) {
-      exportApplicantsData(applications, job.title);
-    } else {
-      toast.error("No data to export.");
+  const unreadCountsByApplication = useUnreadMessagesByApplication();
+
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleViewApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsProfileOpen(true);
+  };
+
+  const handleViewCoverLetter = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsCoverLetterOpen(true);
+  };
+
+  const handleMessageApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsMessageOpen(true);
+  };
+
+  const handleDeleteApplicant = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDeleteApplicant = async () => {
+    if (selectedApplicant) {
+      await deleteApplicant(selectedApplicant.id);
+      setIsDeleteOpen(false);
+      setSelectedApplicant(null);
     }
   };
 
   return (
-    <div>
-      <Button variant="ghost" onClick={onBack} className="mb-4">
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        Back to Job Details
-      </Button>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Jobs
+        </Button>
+        <div>
+          <h2 className="text-2xl font-bold">{job.title}</h2>
+          <p className="text-gray-600">Manage applicants for this position</p>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Applicants for {job.title}</CardTitle>
+          <CardTitle>Applicants ({filteredApplicants.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <ApplicantFilters
             searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
+            onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            date={date}
-            setDate={setDate}
-            onExport={handleExport}
+            onStatusFilterChange={setStatusFilter}
+          />
+          
+          <Separator />
+          
+          <ApplicantActions
+            selectedCount={selectedApplicants.length}
+            onBulkStatusUpdate={bulkUpdateStatus}
+            onBulkDelete={bulkDeleteApplicants}
+            onExport={exportApplicants}
           />
 
           <ApplicantsTable
@@ -89,42 +125,43 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
             selectAll={selectAll}
             onToggleSelectAll={toggleSelectAll}
             onToggleApplicantSelection={toggleApplicantSelection}
-            onStatusChange={handleStatusChange}
-            onDeleteApplicant={handleDeleteApplicant}
+            onStatusChange={updateApplicantStatus}
+            onDeleteApplicant={(id) => {
+              const applicant = applicants.find(a => a.id === id);
+              if (applicant) handleDeleteApplicant(applicant);
+            }}
             onViewApplicant={handleViewApplicant}
             onViewCoverLetter={handleViewCoverLetter}
             onMessageApplicant={handleMessageApplicant}
+            unreadCountsByApplication={unreadCountsByApplication}
           />
         </CardContent>
       </Card>
-      
-      {/* Applicant Profile Dialog */}
-      <ApplicantProfileDialog 
-        applicant={selectedApplicant} 
-        open={isProfileOpen} 
-        onOpenChange={setIsProfileOpen} 
+
+      {/* Dialogs */}
+      <ApplicantProfileDialog
+        applicant={selectedApplicant}
+        open={isProfileOpen}
+        onOpenChange={setIsProfileOpen}
       />
-      
-      {/* Cover Letter Dialog */}
-      <CoverLetterDialog 
-        applicant={selectedApplicant} 
-        open={isCoverLetterOpen} 
-        onOpenChange={setIsCoverLetterOpen} 
+
+      <CoverLetterDialog
+        applicant={selectedApplicant}
+        open={isCoverLetterOpen}
+        onOpenChange={setIsCoverLetterOpen}
       />
-      
-      {/* Delete Applicant Dialog */}
-      <DeleteApplicantDialog 
-        applicant={selectedApplicant} 
-        open={isDeleteOpen} 
-        onOpenChange={setIsDeleteOpen} 
-        onConfirmDelete={handleDeleteApplicant} 
+
+      <MessageDialog
+        applicant={selectedApplicant}
+        open={isMessageOpen}
+        onOpenChange={setIsMessageOpen}
       />
-      
-      {/* Message Dialog */}
-      <MessageDialog 
-        applicant={selectedApplicant} 
-        open={isMessageOpen} 
-        onOpenChange={setIsMessageOpen} 
+
+      <DeleteApplicantDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirm={confirmDeleteApplicant}
+        applicantName={selectedApplicant?.name || ""}
       />
     </div>
   );
