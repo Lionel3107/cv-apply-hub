@@ -75,7 +75,7 @@ export const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
                 onChange={onToggleSelectAll}
               />
             </TableHead>
-            <TableHead>Name</TableHead>
+            <TableHead>Applicant</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Applied Date</TableHead>
             <TableHead>Status</TableHead>

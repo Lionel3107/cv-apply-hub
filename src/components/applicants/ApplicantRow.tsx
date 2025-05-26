@@ -3,6 +3,7 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   MoreHorizontal, 
   Eye, 
@@ -76,7 +77,17 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
           onChange={onSelect}
         />
       </TableCell>
-      <TableCell className="font-medium">{applicant.name}</TableCell>
+      <TableCell>
+        <div className="flex items-center space-x-3">
+          <Avatar>
+            <AvatarImage src={undefined} />
+            <AvatarFallback>{applicant.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{applicant.name}</div>
+          </div>
+        </div>
+      </TableCell>
       <TableCell>{applicant.email}</TableCell>
       <TableCell>
         {format(new Date(applicant.appliedDate), "MMM d, yyyy")}
