@@ -8,7 +8,6 @@ import { useApplications } from "@/hooks/use-applications";
 import { useApplicantManagement } from "@/hooks/use-applicant-management";
 import { useUnreadMessagesByApplication } from "@/hooks/use-unread-messages-by-application";
 import { ApplicantsTable } from "@/components/applicants/ApplicantsTable";
-import { ApplicantActions } from "@/components/applicants/ApplicantActions";
 import { ApplicantFilters } from "@/components/applicants/ApplicantFilters";
 import { ApplicantProfileDialog } from "@/components/applicants/ApplicantProfileDialog";
 import { CoverLetterDialog } from "@/components/applicants/CoverLetterDialog";
@@ -130,12 +129,24 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
           
           <Separator />
           
-          <ApplicantActions
-            selectedApplicants={selectedApplicants}
-            onBulkStatusUpdate={mockBulkUpdateStatus}
-            onBulkDelete={mockBulkDeleteApplicants}
-            onExport={mockExportApplicants}
-          />
+          {selectedApplicants.length > 0 && (
+            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+              <span className="text-sm text-blue-700">
+                {selectedApplicants.length} applicant(s) selected
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={mockBulkUpdateStatus}>
+                  Update Status
+                </Button>
+                <Button size="sm" variant="destructive" onClick={mockBulkDeleteApplicants}>
+                  Delete Selected
+                </Button>
+                <Button size="sm" variant="outline" onClick={mockExportApplicants}>
+                  Export Selected
+                </Button>
+              </div>
+            </div>
+          )}
 
           <ApplicantsTable
             applicants={filteredApplicants}
