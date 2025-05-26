@@ -41,6 +41,7 @@ const getStatusBadgeVariant = (status: ApplicationStatus) => {
     case 'shortlisted':
       return 'default';
     case 'interview':
+    case 'interviewed':
       return 'default';
     case 'rejected':
       return 'destructive';

@@ -1,5 +1,5 @@
 
-export type ApplicationStatus = "new" | "shortlisted" | "interviewed" | "rejected" | "hired";
+export type ApplicationStatus = "new" | "reviewing" | "shortlisted" | "interviewed" | "interview" | "rejected" | "hired";
 
 export interface Applicant {
   id: string;
@@ -9,6 +9,7 @@ export interface Applicant {
   jobTitle: string;
   appliedDate: string;
   resumeUrl: string;
+  status: ApplicationStatus; // Added missing status property
   action: ApplicationStatus;
   skills: string[];
   experience: string;

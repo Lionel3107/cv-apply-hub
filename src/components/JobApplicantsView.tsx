@@ -22,6 +22,9 @@ interface JobApplicantsViewProps {
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
+  const applicantManagement = useApplicantManagement(job.id);
+  
+  // Destructure the hook properties properly
   const {
     applicants,
     filteredApplicants,
@@ -40,7 +43,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
     bulkUpdateStatus,
     bulkDeleteApplicants,
     exportApplicants
-  } = useApplicantManagement(job.id);
+  } = applicantManagement;
 
   const unreadCountsByApplication = useUnreadMessagesByApplication();
 
@@ -126,7 +129,7 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             onToggleSelectAll={toggleSelectAll}
             onToggleApplicantSelection={toggleApplicantSelection}
             onStatusChange={updateApplicantStatus}
-            onDeleteApplicant={(id) => {
+            onDeleteApplicant={async (id) => {
               const applicant = applicants.find(a => a.id === id);
               if (applicant) handleDeleteApplicant(applicant);
             }}
