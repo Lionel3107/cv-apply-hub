@@ -2,13 +2,25 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ApplicantWithScore } from "@/types/applicant";
+import { ApplicantWithScore, ApplicationStatus } from "@/types/applicant";
 import { toast } from "sonner";
 
 interface ApplicantsByJob {
   jobId: string;
   jobTitle: string;
   applicants: ApplicantWithScore[];
+}
+
+// Helper function to validate and type-cast application status
+function validateApplicationStatus(status: string | null): ApplicationStatus {
+  const validStatuses: ApplicationStatus[] = ["new", "reviewing", "shortlisted", "interviewed", "interview", "rejected", "hired"];
+  
+  // If the status is null or not a valid status, default to "new"
+  if (!status || !validStatuses.includes(status as ApplicationStatus)) {
+    return "new";
+  }
+  
+  return status as ApplicationStatus;
 }
 
 export const useBestApplicants = () => {
@@ -87,8 +99,8 @@ export const useBestApplicants = () => {
             jobTitle: job.title,
             appliedDate: app.applied_date,
             resumeUrl: app.resume_url || "",
-            status: app.status || "new",
-            action: app.status || "new",
+            status: validateApplicationStatus(app.status),
+            action: validateApplicationStatus(app.status),
             skills: app.skills || [],
             experience: app.experience || "",
             education: app.education || "",
