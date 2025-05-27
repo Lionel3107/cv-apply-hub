@@ -10,7 +10,9 @@ import {
   FileText, 
   MessageSquare, 
   Trash2,
-  Mail
+  Mail,
+  AlignLeft,
+  Status
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -104,12 +106,39 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
         </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1">
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
+            onClick={() => {}}
+            className="h-8 w-8 p-0"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewApplicant(applicant)}
+            className="h-8 w-8 p-0"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewCoverLetter(applicant)}
+            className="h-8 w-8 p-0"
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => onMessageApplicant(applicant)}
-            className="relative"
+            className="relative h-8 w-8 p-0"
           >
             <MessageSquare className="h-4 w-4" />
             {unreadMessageCount > 0 && (
@@ -124,23 +153,11 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Status className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewApplicant(applicant)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onViewCoverLetter(applicant)}>
-                <FileText className="mr-2 h-4 w-4" />
-                Cover Letter
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMessageApplicant(applicant)}>
-                <Mail className="mr-2 h-4 w-4" />
-                Send Message
-              </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => handleStatusChange('shortlisted')}
                 disabled={applicant.status === 'shortlisted'}
