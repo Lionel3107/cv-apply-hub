@@ -53,6 +53,12 @@ const getStatusBadgeVariant = (status: ApplicationStatus) => {
   }
 };
 
+// Generate a consistent placeholder avatar URL based on the applicant's name
+const getAvatarUrl = (name: string) => {
+  const seed = name.toLowerCase().replace(/\s+/g, '');
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+};
+
 export const ApplicantRow: React.FC<ApplicantRowProps> = ({
   applicant,
   isSelected,
@@ -80,7 +86,7 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
       <TableCell>
         <div className="flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src={undefined} />
+            <AvatarImage src={getAvatarUrl(applicant.name)} alt={applicant.name} />
             <AvatarFallback>{applicant.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
