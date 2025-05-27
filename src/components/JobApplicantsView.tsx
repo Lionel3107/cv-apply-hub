@@ -4,10 +4,10 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useApplications } from "@/hooks/use-applications";
 import { useApplicantManagement } from "@/hooks/use-applicant-management";
 import { useUnreadMessagesByApplication } from "@/hooks/use-unread-messages-by-application";
 import { ApplicantsTable } from "@/components/applicants/ApplicantsTable";
+import { ApplicantActions } from "@/components/applicants/ApplicantActions";
 import { ApplicantFilters } from "@/components/applicants/ApplicantFilters";
 import { ApplicantProfileDialog } from "@/components/applicants/ApplicantProfileDialog";
 import { CoverLetterDialog } from "@/components/applicants/CoverLetterDialog";
@@ -22,28 +22,25 @@ interface JobApplicantsViewProps {
 }
 
 export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
-  // First fetch the applications data
-  const { applications, isLoading, error } = useApplications(job.id);
-  
-  // Then use the management hook with the fetched data
   const {
+    applicants,
+    filteredApplicants,
+    isLoading,
+    error,
     selectedApplicants,
     selectAll,
     searchTerm,
-    setSearchTerm,
     statusFilter,
+    setSearchTerm,
     setStatusFilter,
-    date,
-    setDate,
     toggleSelectAll,
     toggleApplicantSelection,
-    filteredApplicants,
-    handleStatusChange,
-    handleDeleteApplicant,
-    handleViewApplicant,
-    handleViewCoverLetter,
-    handleMessageApplicant
-  } = useApplicantManagement(applications);
+    updateApplicantStatus,
+    deleteApplicant,
+    bulkUpdateStatus,
+    bulkDeleteApplicants,
+    exportApplicants
+  } = useApplicantManagement(job.id);
 
   const unreadCountsByApplication = useUnreadMessagesByApplication();
 
@@ -53,45 +50,32 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const handleViewApplicantWrapper = (applicant: Applicant) => {
+  const handleViewApplicant = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsProfileOpen(true);
   };
 
-  const handleViewCoverLetterWrapper = (applicant: Applicant) => {
+  const handleViewCoverLetter = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsCoverLetterOpen(true);
   };
 
-  const handleMessageApplicantWrapper = (applicant: Applicant) => {
+  const handleMessageApplicant = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsMessageOpen(true);
   };
 
-  const handleDeleteApplicantWrapper = (applicant: Applicant) => {
+  const handleDeleteApplicant = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsDeleteOpen(true);
   };
 
   const confirmDeleteApplicant = async () => {
     if (selectedApplicant) {
-      await handleDeleteApplicant(selectedApplicant.id);
+      await deleteApplicant(selectedApplicant.id);
       setIsDeleteOpen(false);
       setSelectedApplicant(null);
     }
-  };
-
-  // Mock functions for features not yet implemented
-  const mockBulkUpdateStatus = async () => {
-    console.log("Bulk status update not implemented yet");
-  };
-
-  const mockBulkDeleteApplicants = async () => {
-    console.log("Bulk delete not implemented yet");
-  };
-
-  const mockExportApplicants = async () => {
-    console.log("Export not implemented yet");
   };
 
   return (
@@ -119,34 +103,19 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
         <CardContent className="space-y-4">
           <ApplicantFilters
             searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
+            onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            date={date}
-            setDate={setDate}
-            onExport={mockExportApplicants}
+            onStatusFilterChange={setStatusFilter}
           />
           
           <Separator />
           
-          {selectedApplicants.length > 0 && (
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-              <span className="text-sm text-blue-700">
-                {selectedApplicants.length} applicant(s) selected
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={mockBulkUpdateStatus}>
-                  Update Status
-                </Button>
-                <Button size="sm" variant="destructive" onClick={mockBulkDeleteApplicants}>
-                  Delete Selected
-                </Button>
-                <Button size="sm" variant="outline" onClick={mockExportApplicants}>
-                  Export Selected
-                </Button>
-              </div>
-            </div>
-          )}
+          <ApplicantActions
+            selectedCount={selectedApplicants.length}
+            onBulkStatusUpdate={bulkUpdateStatus}
+            onBulkDelete={bulkDeleteApplicants}
+            onExport={exportApplicants}
+          />
 
           <ApplicantsTable
             applicants={filteredApplicants}
@@ -156,14 +125,14 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
             selectAll={selectAll}
             onToggleSelectAll={toggleSelectAll}
             onToggleApplicantSelection={toggleApplicantSelection}
-            onStatusChange={handleStatusChange}
-            onDeleteApplicant={async (id) => {
-              const applicant = applications.find(a => a.id === id);
-              if (applicant) handleDeleteApplicantWrapper(applicant);
+            onStatusChange={updateApplicantStatus}
+            onDeleteApplicant={(id) => {
+              const applicant = applicants.find(a => a.id === id);
+              if (applicant) handleDeleteApplicant(applicant);
             }}
-            onViewApplicant={handleViewApplicantWrapper}
-            onViewCoverLetter={handleViewCoverLetterWrapper}
-            onMessageApplicant={handleMessageApplicantWrapper}
+            onViewApplicant={handleViewApplicant}
+            onViewCoverLetter={handleViewCoverLetter}
+            onMessageApplicant={handleMessageApplicant}
             unreadCountsByApplication={unreadCountsByApplication}
           />
         </CardContent>
@@ -191,8 +160,8 @@ export const JobApplicantsView = ({ job, onBack }: JobApplicantsViewProps) => {
       <DeleteApplicantDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        applicant={selectedApplicant}
-        onConfirmDelete={confirmDeleteApplicant}
+        onConfirm={confirmDeleteApplicant}
+        applicantName={selectedApplicant?.name || ""}
       />
     </div>
   );

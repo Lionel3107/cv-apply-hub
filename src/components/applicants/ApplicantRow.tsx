@@ -3,16 +3,13 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   MoreHorizontal, 
   Eye, 
   FileText, 
   MessageSquare, 
   Trash2,
-  Mail,
-  AlignLeft,
-  Status
+  Mail
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,7 +41,6 @@ const getStatusBadgeVariant = (status: ApplicationStatus) => {
     case 'shortlisted':
       return 'default';
     case 'interview':
-    case 'interviewed':
       return 'default';
     case 'rejected':
       return 'destructive';
@@ -53,12 +49,6 @@ const getStatusBadgeVariant = (status: ApplicationStatus) => {
     default:
       return 'secondary';
   }
-};
-
-// Generate a consistent placeholder avatar URL based on the applicant's name
-const getAvatarUrl = (name: string) => {
-  const seed = name.toLowerCase().replace(/\s+/g, '');
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 };
 
 export const ApplicantRow: React.FC<ApplicantRowProps> = ({
@@ -85,17 +75,7 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
           onChange={onSelect}
         />
       </TableCell>
-      <TableCell>
-        <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarImage src={getAvatarUrl(applicant.name)} alt={applicant.name} />
-            <AvatarFallback>{applicant.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-medium">{applicant.name}</div>
-          </div>
-        </div>
-      </TableCell>
+      <TableCell className="font-medium">{applicant.name}</TableCell>
       <TableCell>{applicant.email}</TableCell>
       <TableCell>
         {format(new Date(applicant.appliedDate), "MMM d, yyyy")}
@@ -106,39 +86,12 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
         </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-2">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {}}
-            className="h-8 w-8 p-0"
-          >
-            <AlignLeft className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onViewApplicant(applicant)}
-            className="h-8 w-8 p-0"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onViewCoverLetter(applicant)}
-            className="h-8 w-8 p-0"
-          >
-            <FileText className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onMessageApplicant(applicant)}
-            className="relative h-8 w-8 p-0"
+            className="relative"
           >
             <MessageSquare className="h-4 w-4" />
             {unreadMessageCount > 0 && (
@@ -153,11 +106,23 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Status className="h-4 w-4" />
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onViewApplicant(applicant)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onViewCoverLetter(applicant)}>
+                <FileText className="mr-2 h-4 w-4" />
+                Cover Letter
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onMessageApplicant(applicant)}>
+                <Mail className="mr-2 h-4 w-4" />
+                Send Message
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => handleStatusChange('shortlisted')}
                 disabled={applicant.status === 'shortlisted'}
