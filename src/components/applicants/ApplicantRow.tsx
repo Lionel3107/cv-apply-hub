@@ -1,24 +1,8 @@
 
-import React from "react";
+import { Applicant, ApplicationStatus } from "@/types/applicant";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Eye, 
-  FileText, 
-  MessageSquare, 
-  Trash2,
-  Mail
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Applicant, ApplicationStatus } from "@/types/applicant";
-import { format } from "date-fns";
+import { ApplicantActions } from "./ApplicantActions";
 
 interface ApplicantRowProps {
   applicant: Applicant;
@@ -26,32 +10,13 @@ interface ApplicantRowProps {
   onSelect: () => void;
   onStatusChange: (applicantId: string, newStatus: ApplicationStatus) => Promise<void>;
   onDelete: (applicantId: string) => Promise<void>;
-  onViewApplicant: (applicant: Applicant) => void;
-  onViewCoverLetter: (applicant: Applicant) => void;
-  onMessageApplicant: (applicant: Applicant) => void;
-  unreadMessageCount?: number;
+  onViewApplicant?: (applicant: Applicant) => void;
+  onViewCoverLetter?: (applicant: Applicant) => void;
+  onEditApplicant?: (applicant: Applicant) => void;
+  onMessageApplicant?: (applicant: Applicant) => void;
 }
 
-const getStatusBadgeVariant = (status: ApplicationStatus) => {
-  switch (status) {
-    case 'new':
-      return 'default';
-    case 'reviewing':
-      return 'secondary';
-    case 'shortlisted':
-      return 'default';
-    case 'interview':
-      return 'default';
-    case 'rejected':
-      return 'destructive';
-    case 'hired':
-      return 'default';
-    default:
-      return 'secondary';
-  }
-};
-
-export const ApplicantRow: React.FC<ApplicantRowProps> = ({
+export const ApplicantRow = ({
   applicant,
   isSelected,
   onSelect,
@@ -59,105 +24,63 @@ export const ApplicantRow: React.FC<ApplicantRowProps> = ({
   onDelete,
   onViewApplicant,
   onViewCoverLetter,
-  onMessageApplicant,
-  unreadMessageCount = 0
-}) => {
-  const handleStatusChange = async (newStatus: ApplicationStatus) => {
-    await onStatusChange(applicant.id, newStatus);
+  onEditApplicant,
+  onMessageApplicant
+}: ApplicantRowProps) => {
+  const getActionBadge = (action: Applicant["action"]) => {
+    switch (action) {
+      case "new":
+        return <Badge className="bg-blue-500">New</Badge>;
+      case "shortlisted":
+        return <Badge className="bg-purple-500">Shortlisted</Badge>;
+      case "interviewed":
+        return <Badge className="bg-orange-500">Interviewed</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejected</Badge>;
+      case "hired":
+        return <Badge className="bg-green-500">Hired</Badge>;
+      default:
+        return <Badge className="bg-gray-500">Unknown</Badge>;
+    }
+  };
+
+  // Create wrapper functions to match expected signatures
+  const handleStatusChange = (applicant: Applicant, action: ApplicationStatus) => {
+    return onStatusChange(applicant.id, action);
+  };
+
+  const handleDeleteApplicant = (applicant: Applicant) => {
+    return onDelete(applicant.id);
   };
 
   return (
-    <TableRow>
+    <TableRow key={applicant.id}>
       <TableCell>
         <input
           type="checkbox"
           checked={isSelected}
           onChange={onSelect}
+          className="h-4 w-4"
         />
       </TableCell>
-      <TableCell className="font-medium">{applicant.name}</TableCell>
-      <TableCell>{applicant.email}</TableCell>
       <TableCell>
-        {format(new Date(applicant.appliedDate), "MMM d, yyyy")}
+        <div className="font-medium">{applicant.name}</div>
       </TableCell>
+      <TableCell>{applicant.email}</TableCell>
+      <TableCell>{new Date(applicant.appliedDate).toLocaleDateString()}</TableCell>
       <TableCell>
-        <Badge variant={getStatusBadgeVariant(applicant.status)}>
-          {applicant.status}
-        </Badge>
+        {getActionBadge(applicant.action)}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onMessageApplicant(applicant)}
-            className="relative"
-          >
-            <MessageSquare className="h-4 w-4" />
-            {unreadMessageCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs"
-              >
-                {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
-              </Badge>
-            )}
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewApplicant(applicant)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onViewCoverLetter(applicant)}>
-                <FileText className="mr-2 h-4 w-4" />
-                Cover Letter
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onMessageApplicant(applicant)}>
-                <Mail className="mr-2 h-4 w-4" />
-                Send Message
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleStatusChange('shortlisted')}
-                disabled={applicant.status === 'shortlisted'}
-              >
-                Shortlist
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleStatusChange('interview')}
-                disabled={applicant.status === 'interview'}
-              >
-                Schedule Interview
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleStatusChange('hired')}
-                disabled={applicant.status === 'hired'}
-              >
-                Mark as Hired
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleStatusChange('rejected')}
-                disabled={applicant.status === 'rejected'}
-                className="text-red-600"
-              >
-                Reject
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(applicant.id)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <ApplicantActions 
+          applicant={applicant}
+          onViewApplicant={onViewApplicant}
+          onViewCoverLetter={onViewCoverLetter}
+          onEditApplicant={onEditApplicant}
+          onDeleteApplicant={handleDeleteApplicant}
+          onChangeAction={handleStatusChange}
+          onMessageApplicant={onMessageApplicant}
+        />
       </TableCell>
     </TableRow>
   );

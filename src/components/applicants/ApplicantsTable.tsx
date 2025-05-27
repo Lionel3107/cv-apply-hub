@@ -25,7 +25,6 @@ interface ApplicantsTableProps {
   onViewApplicant: (applicant: Applicant) => void;
   onViewCoverLetter: (applicant: Applicant) => void;
   onMessageApplicant: (applicant: Applicant) => void;
-  unreadCountsByApplication?: Record<string, number>;
 }
 
 export const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
@@ -40,8 +39,7 @@ export const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
   onDeleteApplicant,
   onViewApplicant,
   onViewCoverLetter,
-  onMessageApplicant,
-  unreadCountsByApplication = {}
+  onMessageApplicant
 }) => {
   if (isLoading) {
     return (
@@ -95,7 +93,6 @@ export const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
                 onViewApplicant={onViewApplicant}
                 onViewCoverLetter={onViewCoverLetter}
                 onMessageApplicant={onMessageApplicant}
-                unreadMessageCount={unreadCountsByApplication[applicant.id] || 0}
               />
             ))
           ) : (
