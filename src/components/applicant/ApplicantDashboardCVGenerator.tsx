@@ -40,19 +40,19 @@ export const ApplicantDashboardCVGenerator = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="fullName">Full Name</Label>
-                          <Input id="fullName" placeholder="John Doe" />
+                          <Input id="fullName" placeholder="Kabore Lionel" />
                         </div>
                         <div>
                           <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="john@example.com" />
+                          <Input id="email" type="email" placeholder="dimkoff@example.com" />
                         </div>
                         <div>
                           <Label htmlFor="phone">Phone</Label>
-                          <Input id="phone" placeholder="+1 123 456 7890" />
+                          <Input id="phone" placeholder="+226 75 15 66 87" />
                         </div>
                         <div>
                           <Label htmlFor="location">Location</Label>
-                          <Input id="location" placeholder="New York, USA" />
+                          <Input id="location" placeholder="Ouagadougou, Burkina Faso" />
                         </div>
                       </div>
                     </div>

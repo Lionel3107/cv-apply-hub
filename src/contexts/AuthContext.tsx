@@ -12,7 +12,7 @@ type Profile = {
   location: string | null;
   bio: string | null;
   is_employer: boolean;
-  company_id: string | null;
+  company_id: string | null; 
   avatar_url: string | null;
 };
 

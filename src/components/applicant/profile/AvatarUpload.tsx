@@ -62,9 +62,13 @@ export const AvatarUpload = ({ avatarUrl, firstName, lastName, onAvatarUpdate }:
 
       onAvatarUpdate(newAvatarUrl);
       toast.success("Avatar updated successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading avatar:", error);
-      toast.error(error.message || "Failed to upload avatar");
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to upload avatar");
+      } else {
+        toast.error("Failed to upload avatar");
+      }
     } finally {
       setIsLoading(false);
     }

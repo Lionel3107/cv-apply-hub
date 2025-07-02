@@ -37,7 +37,7 @@ const CtaSection = () => {
                 </Button>
               </Link>
               <Link to="/about">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 rounded-full px-8 py-6 h-auto text-lg">
+                <Button size="lg" className="bg-white text-brand-darkBlue hover:bg-darkBlue-100 rounded-full px-8 py-6 h-auto text-lg shadow-lg">
                   Learn More
                 </Button>
               </Link>
