@@ -32,7 +32,7 @@ export const MessageDialog = ({
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, isLoading, sendMessage } = useMessages(applicant?.id);
+  const { messages, isLoading, sendMessage, markAsRead } = useMessages(applicant?.id);
   const [isSending, setIsSending] = useState(false);
 
   // Scroll to the bottom when messages change
@@ -41,6 +41,17 @@ export const MessageDialog = ({
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  // Mark messages as read when viewing
+  useEffect(() => {
+    if (open && messages.length > 0) {
+      messages.forEach(message => {
+        if (!message.isRead && message.recipientId === user?.id) {
+          markAsRead(message.id);
+        }
+      });
+    }
+  }, [open, messages, user?.id, markAsRead]);
 
   // Reset new message when dialog closes
   useEffect(() => {

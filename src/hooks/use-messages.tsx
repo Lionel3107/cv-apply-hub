@@ -89,7 +89,7 @@ export const useMessages = (applicationId?: string) => {
           table: "messages",
           filter: applicationId 
             ? `related_application_id=eq.${applicationId}` 
-            : `sender_id=eq.${user.id}:recipient_id=eq.${user.id}`
+            : `or(sender_id.eq.${user.id},recipient_id.eq.${user.id})`
         },
         (payload) => {
           console.log("Realtime message update:", payload);
