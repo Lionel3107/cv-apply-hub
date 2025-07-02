@@ -27,7 +27,7 @@ const mockInterviews = [
     companyName: "Creative Solutions Ltd.",
     date: "2025-04-15T14:00:00",
     format: "in-person",
-    location: "125 Main Street, Suite 400",
+    location: "Burkina Institue of Technology, Koudougou",
     status: "upcoming",
     tips: [
       "Bring your portfolio in digital and print format",
