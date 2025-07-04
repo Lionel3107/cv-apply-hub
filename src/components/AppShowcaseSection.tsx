@@ -3,13 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious
-} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
 
 const screenshots = [
   {
@@ -59,53 +53,56 @@ const AppShowcaseSection = () => {
           </Link>
         </div>
         
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <Carousel className="w-full">
-            <CarouselContent>
-              {screenshots.map((item, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <motion.div 
-                      className="rounded-xl overflow-hidden border border-gray-100 shadow-md bg-white h-full flex flex-col"
-                      whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)" }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="relative pt-[60%]">
-                        <img 
-                          src={item.image} 
-                          alt={item.altText} 
-                          className="absolute inset-0 w-full h-full object-cover"
-                          onError={(e) => { 
-                            e.currentTarget.src = "/placeholder.svg"; 
-                            e.currentTarget.alt = "Placeholder image";
-                          }}
-                        />
-                      </div>
-                      <div className="p-5">
-                        <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                        <p className="text-gray-600">{item.description}</p>
-                      </div>
-                    </motion.div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2 -mt-12" />
-            <CarouselNext className="right-2 -mt-12" />
-          </Carousel>
+        <div className="space-y-16">
+          {screenshots.map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12`}
+            >
+              <div className="flex-1 max-w-2xl">
+                <Card className="overflow-hidden shadow-2xl border-0">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <img 
+                        src={item.image} 
+                        alt={item.altText} 
+                        className="w-full h-auto object-cover rounded-lg"
+                        onError={(e) => { 
+                          e.currentTarget.src = "/placeholder.svg"; 
+                          e.currentTarget.alt = "Placeholder image";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="flex-1 text-center lg:text-left">
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">{item.title}</h3>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">{item.description}</p>
+                <Button 
+                  variant="outline" 
+                  className="border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
+                >
+                  Learn More
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
           
-          <div className="mt-10 text-center">
-            <Button className="rounded-full px-8 py-6 h-auto shadow-md bg-brand-blue hover:bg-brand-darkBlue text-white">
-              Request a Demo
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-        </motion.div>
+        <div className="mt-16 text-center">
+          <Button className="rounded-full px-8 py-6 h-auto shadow-md bg-brand-blue hover:bg-brand-darkBlue text-white">
+            Request a Demo
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
       </div>
     </section>
   );

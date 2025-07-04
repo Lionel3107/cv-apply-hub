@@ -8,9 +8,11 @@ import { useMessages } from "@/hooks/use-messages";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConversationView } from "./ConversationView";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const ApplicantDashboardMessages = () => {
-  const { messages, isLoading, error } = useMessages();
+  const { user } = useAuth();
+  const { messages, isLoading, error, markAsRead } = useMessages();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
   // Group messages by application or sender
@@ -96,7 +98,15 @@ export const ApplicantDashboardMessages = () => {
                 <div
                   key={conversationId}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => setSelectedConversation(conversationId)}
+                  onClick={() => {
+                    setSelectedConversation(conversationId);
+                    // Mark unread messages as read when opening conversation
+                    conversationMessages.forEach(message => {
+                      if (!message.isRead && message.recipientId === user?.id) {
+                        markAsRead(message.id);
+                      }
+                    });
+                  }}
                 >
                   <div className="flex items-center space-x-4 flex-1">
                     <div className="h-12 w-12 rounded-full bg-brand-blue flex items-center justify-center">

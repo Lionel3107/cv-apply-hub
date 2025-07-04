@@ -1,35 +1,17 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Building,
-  Menu,
-  X,
-  Search,
-  Briefcase,
-  User,
-  LogOut,
-  Home,
-  Info,
-  FileText,
-  Mail
-} from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { MessageNotification } from "@/components/header/MessageNotification";
+import { UserDropdown } from "@/components/header/UserDropdown";
+import { MobileMenu } from "@/components/header/MobileMenu";
 
 export const Header = () => {
   const { user, profile, isLoading } = useAuth();
@@ -59,26 +41,6 @@ export const Header = () => {
         toast.error("Error signing out");
       }
     }
-  };
-
-  const getInitials = (name?: string) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  const getProfileInitials = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
-    }
-    if (profile?.first_name) {
-      return profile.first_name.substring(0, 2).toUpperCase();
-    }
-    return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
   return (
@@ -113,68 +75,18 @@ export const Header = () => {
           <div className="flex items-center space-x-2">
             {/* Message notification for companies */}
             {user && profile?.is_employer && (
-              <Link to="/dashboard">
-                <Button variant="ghost" size="icon" className="relative">
-                  <Mail className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+              <MessageNotification unreadCount={unreadCount} />
             )}
 
             {isLoading ? (
               <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="p-1 h-auto rounded-full">
-                    <Avatar className="h-9 w-9 border">
-                      <AvatarImage src={profile?.avatar_url || ""} />
-                      <AvatarFallback>{getProfileInitials()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="p-2">
-                    <p className="text-sm font-medium">
-                      {profile?.first_name ? `${profile.first_name} ${profile.last_name || ""}` : user.email}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  {profile?.is_employer ? (
-                    <Link to="/dashboard">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Building className="mr-2 h-4 w-4" />
-                        <span>Company Dashboard</span>
-                        {unreadCount > 0 && (
-                          <Badge variant="secondary" className="ml-auto">
-                            {unreadCount}
-                          </Badge>
-                        )}
-                      </DropdownMenuItem>
-                    </Link>
-                  ) : (
-                    <Link to="/applicant-dashboard">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>My Dashboard</span>
-                      </DropdownMenuItem>
-                    </Link>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserDropdown 
+                user={user} 
+                profile={profile} 
+                unreadCount={unreadCount} 
+                onSignOut={handleSignOut} 
+              />
             ) : (
               <Link to="/auth">
                 <Button>Sign in</Button>
@@ -194,57 +106,12 @@ export const Header = () => {
         </div>
 
         {mobileMenuOpen && (
-          <nav className="md:hidden pt-4 pb-2 border-t mt-3 space-y-2">
-            <Link to="/" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-              <Home className="mr-2 h-5 w-5" />
-              Home
-            </Link>
-            <Link to="/jobs" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-              <Briefcase className="mr-2 h-5 w-5" />
-              Find Jobs
-            </Link>
-            <Link to="/companies" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-              <Building className="mr-2 h-5 w-5" />
-              Companies
-            </Link>
-            <Link to="/about" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-              <Info className="mr-2 h-5 w-5" />
-              About Us
-            </Link>
-            {user && (
-              <>
-                {profile?.is_employer ? (
-                  <>
-                    <Link to="/dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-                      <Building className="mr-2 h-5 w-5" />
-                      Company Dashboard
-                      {unreadCount > 0 && (
-                        <Badge variant="secondary" className="ml-auto">
-                          {unreadCount}
-                        </Badge>
-                      )}
-                    </Link>
-                    <Link to="/post-job" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-                      <FileText className="mr-2 h-5 w-5" />
-                      Post Job
-                    </Link>
-                  </>
-                ) : (
-                  <Link to="/applicant-dashboard" className="flex items-center px-3 py-2 rounded-md hover:bg-gray-100 text-gray-700">
-                    <User className="mr-2 h-5 w-5" />
-                    My Dashboard
-                  </Link>
-                )}
-                <button 
-                  onClick={handleSignOut}
-                  className="w-full text-left flex items-center px-3 py-2 rounded-md hover:bg-red-50 text-red-600"
-                >
-                  <LogOut className="mr-2 h-5 w-5" />
-                  Sign out
-                </button>
-              </>
-            )}
-          </nav>
+          <MobileMenu 
+            user={user} 
+            profile={profile} 
+            unreadCount={unreadCount} 
+            onSignOut={handleSignOut} 
+          />
         )}
       </div>
     </header>
