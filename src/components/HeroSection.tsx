@@ -89,7 +89,7 @@ const HeroSection = () => {
           >
             <div className="flex gap-3 items-center bg-white/10 rounded-full py-3 px-6 backdrop-blur-sm">
               <span className="text-white/80 text-sm">
-                Trusted by 1,200+ companies worldwide
+                The most powerful recruitment platform for companies and candidates
               </span>
             </div>
           </motion.div>

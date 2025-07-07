@@ -34,8 +34,12 @@ export const Header = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Signed out successfully");
-    } catch (error: any) {
-      toast.error(`Error signing out: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(`Error signing out: ${error.message}`);
+      } else {
+        toast.error("Error signing out");
+      }
     }
   };
 
@@ -45,7 +49,7 @@ export const Header = () => {
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-brand-blue">
             <Logo className="h-8 w-8" />
-            <span className="hidden sm:inline">JobPortal</span>
+            <span className="hidden sm:inline">DimKoff</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-1">
