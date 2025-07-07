@@ -29,23 +29,79 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const { applicationId, jobDescription, candidateData }: CVAnalysisRequest = await req.json();
+    // Vérification de la clé API
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'OpenAI API key not configured' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    console.log(`Analyzing CV for application: ${applicationId}`);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Validation des données d'entrée
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid JSON in request body' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { applicationId, jobDescription, candidateData }: CVAnalysisRequest = requestData;
+
+    // Validation des champs requis
+    if (!applicationId || !jobDescription || !candidateData) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Missing required fields: applicationId, jobDescription, or candidateData' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validation supplémentaire des données candidat
+    if (!candidateData.name || !candidateData.email) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Candidate name and email are required' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Starting CV analysis for application: ${applicationId}`);
+
+    // Sanitization du prompt pour éviter l'injection
+    const sanitizedJobDescription = jobDescription.replace(/[<>]/g, '').substring(0, 2000);
+    const sanitizedName = candidateData.name.replace(/[<>]/g, '').substring(0, 100);
+    const sanitizedEmail = candidateData.email.replace(/[<>]/g, '').substring(0, 100);
+    const sanitizedExperience = (candidateData.experience || '').replace(/[<>]/g, '').substring(0, 1000);
+    const sanitizedEducation = (candidateData.education || '').replace(/[<>]/g, '').substring(0, 1000);
 
     const prompt = `
 You are an expert HR recruiter analyzing a candidate's profile for a specific job position. 
 
 JOB DESCRIPTION:
-${jobDescription}
+${sanitizedJobDescription}
 
 CANDIDATE PROFILE:
-Name: ${candidateData.name}
-Email: ${candidateData.email}
-Experience: ${candidateData.experience || 'Not provided'}
-Education: ${candidateData.education || 'Not provided'}
-Skills: ${candidateData.skills?.join(', ') || 'Not provided'}
+Name: ${sanitizedName}
+Email: ${sanitizedEmail}
+Experience: ${sanitizedExperience || 'Not provided'}
+Education: ${sanitizedEducation || 'Not provided'}
+Skills: ${candidateData.skills?.slice(0, 20)?.join(', ') || 'Not provided'}
 
 Please analyze this candidate and provide:
 1. A compatibility score from 0 to 100 (where 100 is perfect match)
@@ -75,7 +131,7 @@ Format your response as JSON:
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert HR recruiter. Analyze candidates objectively and provide constructive feedback. Always respond with valid JSON.' 
+            content: 'You are an expert HR recruiter. Analyze candidates objectively and provide constructive feedback. Always respond with valid JSON only, no additional text.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -85,18 +141,40 @@ Format your response as JSON:
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid response format from OpenAI API');
+    }
+
     const analysisText = data.choices[0].message.content;
 
-    // Parse the JSON response from OpenAI
+    // Parse the JSON response from OpenAI avec meilleure gestion d'erreur
     let analysis;
     try {
       analysis = JSON.parse(analysisText);
+      
+      // Validation de la structure de réponse
+      if (typeof analysis.score !== 'number' || 
+          !Array.isArray(analysis.strengths) || 
+          !Array.isArray(analysis.improvements) ||
+          typeof analysis.recommendation !== 'string' ||
+          typeof analysis.feedback !== 'string') {
+        throw new Error('Invalid analysis structure');
+      }
+
+      // Validation des valeurs
+      analysis.score = Math.max(0, Math.min(100, analysis.score));
+      
     } catch (e) {
       console.error('Failed to parse OpenAI response as JSON:', analysisText);
+      console.error('Parse error:', e);
+      
       // Fallback analysis if JSON parsing fails
       analysis = {
         score: 50,
@@ -122,7 +200,7 @@ Format your response as JSON:
       throw new Error('Failed to update application with analysis results');
     }
 
-    console.log(`CV analysis completed for application ${applicationId} with score: ${analysis.score}`);
+    console.log(`CV analysis completed successfully for application ${applicationId} with score: ${analysis.score}`);
 
     return new Response(JSON.stringify({
       success: true,
@@ -142,7 +220,7 @@ Format your response as JSON:
     console.error('Error in CV analysis function:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error.message || 'Internal server error' 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
