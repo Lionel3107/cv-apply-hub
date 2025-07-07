@@ -11,7 +11,8 @@ import {
   ListFilter,
   UserCheck,
   Trash2,
-  MessageSquare
+  MessageSquare,
+  Brain
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,9 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCVAnalysis } from "@/hooks/use-cv-analysis";
 
 interface ApplicantActionsProps {
   applicant: Applicant;
+  jobDescription?: string;
   onViewApplicant: (applicant: Applicant) => void;
   onViewCoverLetter: (applicant: Applicant) => void;
   onEditApplicant: (applicant: Applicant) => void;
@@ -32,6 +35,7 @@ interface ApplicantActionsProps {
 
 export const ApplicantActions = ({
   applicant,
+  jobDescription,
   onViewApplicant,
   onViewCoverLetter,
   onEditApplicant,
@@ -39,6 +43,26 @@ export const ApplicantActions = ({
   onChangeAction,
   onMessageApplicant
 }: ApplicantActionsProps) => {
+  const { analyzeCV, isAnalyzing } = useCVAnalysis();
+
+  const handleAnalyzeCV = async () => {
+    if (!jobDescription) {
+      alert('Job description is required for CV analysis');
+      return;
+    }
+
+    await analyzeCV({
+      applicationId: applicant.id,
+      jobDescription,
+      candidateData: {
+        name: applicant.name,
+        email: applicant.email,
+        experience: applicant.experience || '',
+        education: applicant.education || '',
+        skills: applicant.skills || []
+      }
+    });
+  };
   const handleDownloadResume = () => {
     if (applicant.resumeUrl) {
       // Create a temporary anchor element to trigger download
@@ -75,6 +99,15 @@ export const ApplicantActions = ({
           <MessageSquare className="h-4 w-4" />
         </Button>
       )}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleAnalyzeCV}
+        disabled={isAnalyzing || !jobDescription}
+        className="text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+      >
+        <Brain className="h-4 w-4" />
+      </Button>
       <Button 
         variant="outline" 
         size="sm"
