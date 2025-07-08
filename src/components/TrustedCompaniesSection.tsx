@@ -1,48 +1,27 @@
 import { motion } from "framer-motion";
-import { CheckCircle, Users, Clock, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Upload, Search, UserCheck } from "lucide-react";
 
-const companyLogos = [
-  { name: "TechCorp", logo: "TC" },
-  { name: "InnovateX", logo: "IX" },
-  { name: "DataFlow", logo: "DF" },
-  { name: "CloudTech", logo: "CT" },
-  { name: "NextGen", logo: "NG" },
-  { name: "FutureWorks", logo: "FW" },
-  { name: "SmartSystems", logo: "SS" },
-  { name: "DevSolutions", logo: "DS" }
-];
-
-const metrics = [
+const steps = [
   {
-    icon: Users,
-    value: "10,000+",
-    label: "Successful Placements",
-    description: "Candidates placed in their dream jobs"
+    icon: Upload,
+    title: "Upload Your CV",
+    description: "Simply upload your resume and let our AI analyze your skills and experience"
   },
   {
-    icon: Clock,
-    value: "60%",
-    label: "Faster Hiring",
-    description: "Reduction in time-to-hire"
+    icon: Search,
+    title: "Find Perfect Matches",
+    description: "Browse through curated job opportunities that match your profile"
   },
   {
-    icon: TrendingUp,
-    value: "95%",
-    label: "Success Rate",
-    description: "Of placements still active after 1 year"
-  },
-  {
-    icon: CheckCircle,
-    value: "500+",
-    label: "Partner Companies",
-    description: "Trust our platform for their hiring needs"
+    icon: UserCheck,
+    title: "Get Hired",
+    description: "Apply with confidence and land your dream job with our streamlined process"
   }
 ];
 
-const TrustedCompaniesSection = () => {
+const HowItWorksSection = () => {
   return (
-    <section className="py-24 bg-gradient-to-br from-background to-muted/20">
+    <section className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <motion.div
@@ -51,88 +30,51 @@ const TrustedCompaniesSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="secondary" className="mb-4 text-sm font-medium">
-              Trusted Worldwide
-            </Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Powering Success for Leading Companies
+              How it Works
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join hundreds of forward-thinking companies that have transformed their hiring process with our platform
+              Get started in just three simple steps and transform your job search experience
             </p>
           </motion.div>
         </div>
 
-        {/* Company Logos Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 mb-20"
-        >
-          {companyLogos.map((company, index) => (
+        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+          {steps.map((step, index) => (
             <motion.div
-              key={company.name}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="flex items-center justify-center"
-            >
-              <div className="w-16 h-16 bg-card border border-border rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                <span className="text-xl font-bold text-primary">{company.logo}</span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Metrics Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {metrics.map((metric, index) => (
-            <motion.div
-              key={metric.label}
+              key={step.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="text-center p-6 bg-card border border-border rounded-2xl hover:shadow-lg transition-all duration-300 hover:scale-105"
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              className="text-center relative"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mb-4">
-                <metric.icon className="h-6 w-6 text-primary" />
+              {/* Step Number */}
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold mb-6">
+                {index + 1}
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">{metric.value}</h3>
-              <h4 className="text-lg font-semibold text-foreground mb-2">{metric.label}</h4>
-              <p className="text-sm text-muted-foreground">{metric.description}</p>
+              
+              {/* Icon */}
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-6 mt-8">
+                <step.icon className="h-8 w-8 text-primary" />
+              </div>
+              
+              {/* Content */}
+              <h3 className="text-xl font-semibold text-foreground mb-3">{step.title}</h3>
+              <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+              
+              {/* Arrow (except for last step) */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2">
+                  <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-16"
-        >
-          <p className="text-muted-foreground mb-4">
-            Ready to join these industry leaders?
-          </p>
-          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span>No setup fees</span>
-            <span className="text-border">•</span>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span>Cancel anytime</span>
-            <span className="text-border">•</span>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <span>24/7 support</span>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
 };
 
-export default TrustedCompaniesSection;
+export default HowItWorksSection;
