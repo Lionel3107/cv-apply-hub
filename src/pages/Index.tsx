@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
-import AppShowcaseSection from "@/components/AppShowcaseSection";
+import TrustedCompaniesSection from "@/components/TrustedCompaniesSection";
 import UploadCVSection from "@/components/UploadCVSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FaqSection from "@/components/FaqSection";
@@ -24,7 +24,7 @@ const Index = () => {
         <HeroSection />
         <StatsSection />
         <FeaturesSection />
-        <AppShowcaseSection />
+        <TrustedCompaniesSection />
         
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-5xl mx-auto">
