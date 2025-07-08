@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ApplicationStatus } from "@/types/applicant";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, Download, Search, CalendarIcon } from "lucide-react";
+import { Filter, Download, Search, CalendarIcon, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -19,6 +19,8 @@ interface ApplicantFiltersProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   onExport: () => void;
+  onAnalyzeAll?: () => void;
+  isAnalyzingAll?: boolean;
 }
 
 export const ApplicantFilters: React.FC<ApplicantFiltersProps> = ({
@@ -28,7 +30,9 @@ export const ApplicantFilters: React.FC<ApplicantFiltersProps> = ({
   setStatusFilter,
   date,
   setDate,
-  onExport
+  onExport,
+  onAnalyzeAll,
+  isAnalyzingAll
 }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const allStatuses: ApplicationStatus[] = ["new", "shortlisted", "interviewed", "rejected", "hired"];
@@ -107,6 +111,17 @@ export const ApplicantFilters: React.FC<ApplicantFiltersProps> = ({
           </PopoverContent>
         </Popover>
 
+        {onAnalyzeAll && (
+          <Button 
+            variant="outline" 
+            onClick={onAnalyzeAll}
+            disabled={isAnalyzingAll}
+            className="text-purple-600 border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+          >
+            <Brain className="mr-2 h-4 w-4" />
+            {isAnalyzingAll ? 'Analyzing...' : 'Analyze All CVs'}
+          </Button>
+        )}
         <Button variant="secondary" onClick={onExport}>
           <Download className="mr-2 h-4 w-4" />
           Export

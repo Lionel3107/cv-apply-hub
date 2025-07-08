@@ -3,6 +3,8 @@ import { Applicant, ApplicationStatus } from "@/types/applicant";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ApplicantActions } from "./ApplicantActions";
+import { useJobs } from "@/hooks/use-jobs";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ApplicantRowProps {
   applicant: Applicant;
@@ -14,6 +16,7 @@ interface ApplicantRowProps {
   onViewCoverLetter?: (applicant: Applicant) => void;
   onEditApplicant?: (applicant: Applicant) => void;
   onMessageApplicant?: (applicant: Applicant) => void;
+  jobDescription?: string;
 }
 
 export const ApplicantRow = ({
@@ -25,7 +28,8 @@ export const ApplicantRow = ({
   onViewApplicant,
   onViewCoverLetter,
   onEditApplicant,
-  onMessageApplicant
+  onMessageApplicant,
+  jobDescription
 }: ApplicantRowProps) => {
   const getActionBadge = (action: Applicant["action"]) => {
     switch (action) {
@@ -74,6 +78,7 @@ export const ApplicantRow = ({
       <TableCell className="text-right">
         <ApplicantActions 
           applicant={applicant}
+          jobDescription={jobDescription}
           onViewApplicant={onViewApplicant}
           onViewCoverLetter={onViewCoverLetter}
           onEditApplicant={onEditApplicant}

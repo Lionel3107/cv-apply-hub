@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ApplicantFilters } from "./applicants/ApplicantFilters";
 import { ApplicantsTable } from "./applicants/ApplicantsTable";
 import { useApplicantManagement } from "@/hooks/use-applicant-management";
+import { useCVAnalysis } from "@/hooks/use-cv-analysis";
 
 interface JobApplicantsViewProps {
   job: Job;
@@ -22,6 +23,7 @@ interface JobApplicantsViewProps {
 
 export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBack }) => {
   const { applications, isLoading, error } = useApplications(job.id);
+  const { analyzeBulkCVs, isAnalyzing } = useCVAnalysis();
   
   const {
     selectedApplicants,
@@ -59,6 +61,14 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
     }
   };
 
+  const handleAnalyzeAll = async () => {
+    if (applications && applications.length > 0) {
+      await analyzeBulkCVs(applications, job.description);
+    } else {
+      toast.error("No applications to analyze.");
+    }
+  };
+
   return (
     <div>
       <Button variant="ghost" onClick={onBack} className="mb-4">
@@ -79,6 +89,8 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
             date={date}
             setDate={setDate}
             onExport={handleExport}
+            onAnalyzeAll={handleAnalyzeAll}
+            isAnalyzingAll={isAnalyzing}
           />
 
           <ApplicantsTable
@@ -94,6 +106,7 @@ export const JobApplicantsView: React.FC<JobApplicantsViewProps> = ({ job, onBac
             onViewApplicant={handleViewApplicant}
             onViewCoverLetter={handleViewCoverLetter}
             onMessageApplicant={handleMessageApplicant}
+            jobDescription={job.description}
           />
         </CardContent>
       </Card>
