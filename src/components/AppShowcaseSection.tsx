@@ -9,13 +9,13 @@ const screenshots = [
   {
     title: "AI-Powered Dashboard",
     description: "Analyze candidate data with our intuitive dashboard",
-    image: "/dashboard-screenshot.png", // Placeholder image
+    image: "/image.jpeg", // Placeholder image
     altText: "ATS dashboard with analytics charts and candidate metrics"
   },
   {
     title: "CV Parsing & Analysis",
     description: "Automatically extract and rank candidate information",
-    image: "/cv-parsing-screenshot.png", // Placeholder image
+    image: "/image.png", // Placeholder image
     altText: "CV parsing interface with highlighted skills and experience"
   },
   {
