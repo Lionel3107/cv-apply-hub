@@ -1,9 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ResumeUpload from "@/components/forms/ResumeUpload";
+import CoverLetterUpload from "@/components/forms/CoverLetterUpload";
 import { useApplicationForm } from "@/hooks/use-application-form";
 import { Job } from "@/types/job";
 
@@ -15,10 +15,14 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
   const {
     formData,
     resumeFile,
+    coverLetterFile,
     isSubmitting,
     fileError,
+    coverLetterError,
     setResumeFile,
     setFileError,
+    setCoverLetterFile,
+    setCoverLetterError,
     handleInputChange,
     handleSubmit
   } = useApplicationForm(job.id);
@@ -72,23 +76,18 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
             setFileError={setFileError}
           />
           
-          <div>
-            <Label htmlFor="coverLetter">Cover Letter</Label>
-            <Textarea
-              id="coverLetter"
-              name="coverLetter"
-              placeholder="Tell us why you're a great fit for this role"
-              rows={5}
-              value={formData.coverLetter}
-              onChange={handleInputChange}
-            />
-          </div>
+          <CoverLetterUpload
+            coverLetterFile={coverLetterFile}
+            setCoverLetterFile={setCoverLetterFile}
+            fileError={coverLetterError}
+            setFileError={setCoverLetterError}
+          />
         </div>
         
         <Button 
           type="submit" 
           className="w-full mt-6 bg-brand-blue hover:bg-brand-darkBlue"
-          disabled={isSubmitting || !!fileError}
+          disabled={isSubmitting || !!fileError || !!coverLetterError}
         >
           {isSubmitting ? "Submitting..." : "Submit Application"}
         </Button>
