@@ -10,6 +10,7 @@ import { ApplicantDashboardFeedback } from "@/components/applicant/ApplicantDash
 import { ApplicantDashboardLinkedInImport } from "@/components/applicant/ApplicantDashboardLinkedInImport";
 import { ApplicantDashboardInterviews } from "@/components/applicant/ApplicantDashboardInterviews";
 import { ApplicantDashboardMessages } from "@/components/applicant/ApplicantDashboardMessages";
+import { ApplicantDashboardJobMatcher } from "@/components/applicant/ApplicantDashboardJobMatcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -48,6 +49,7 @@ const ApplicantDashboard = () => {
             <Tabs defaultValue="applications" onValueChange={setActiveTab}>
               <TabsList className="mb-8 flex flex-wrap">
                 <TabsTrigger value="applications">My Applications</TabsTrigger>
+                <TabsTrigger value="job-matcher">Job Matcher</TabsTrigger>
                 <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="interviews">Interviews & Recommendations</TabsTrigger>
                 <TabsTrigger value="cv-generator">CV Generator</TabsTrigger>
@@ -57,6 +59,9 @@ const ApplicantDashboard = () => {
               </TabsList>
               <TabsContent value="applications" className="animate-fade-in">
                 <ApplicantDashboardApplications />
+              </TabsContent>
+              <TabsContent value="job-matcher" className="animate-fade-in">
+                <ApplicantDashboardJobMatcher />
               </TabsContent>
               <TabsContent value="messages" className="animate-fade-in">
                 <ApplicantDashboardMessages />
