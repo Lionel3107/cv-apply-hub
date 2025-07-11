@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-bold text-brand-blue mb-4">CVApplyHub</h3>
+            <h3 className="text-xl font-bold text-brand-blue mb-4">Dimkoff int app</h3>
             <p className="text-gray-600 mb-4">
               Connecting talent with opportunities worldwide.
             </p>
@@ -78,7 +78,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-200 mt-8 pt-8 text-center text-gray-500">
-          <p>© {new Date().getFullYear()} CVApplyHub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Dimkoff int app. All rights reserved.</p>
         </div>
       </div>
     </footer>
