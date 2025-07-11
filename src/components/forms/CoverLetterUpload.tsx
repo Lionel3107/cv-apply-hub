@@ -46,7 +46,7 @@ const CoverLetterUpload = ({
   
   return (
     <div>
-      <Label htmlFor="coverLetter">Cover Letter (PDF)</Label>
+      <Label htmlFor="coverLetter">Cover Letter (PDF) - Optional</Label>
       {coverLetterFile ? (
         <div className="flex items-center p-3 border rounded-md bg-gray-50">
           <div className="flex-1 truncate">

@@ -87,7 +87,7 @@ const JobApplicationForm = ({ job }: JobApplicationFormProps) => {
         <Button 
           type="submit" 
           className="w-full mt-6 bg-brand-blue hover:bg-brand-darkBlue"
-          disabled={isSubmitting || !!fileError || !!coverLetterError}
+          disabled={isSubmitting || !!fileError}
         >
           {isSubmitting ? "Submitting..." : "Submit Application"}
         </Button>

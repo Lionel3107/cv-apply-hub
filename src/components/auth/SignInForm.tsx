@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 // Form schema
 const signInSchema = z.object({
@@ -31,6 +32,7 @@ interface SignInFormProps {
 
 const SignInForm = ({ onSignIn }: SignInFormProps) => {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const navigate = useNavigate();
 
   const form = useForm<SignInFormValues>({
@@ -114,7 +116,26 @@ const SignInForm = ({ onSignIn }: SignInFormProps) => {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <div className="relative">
+                  <Input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    {...field} 
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

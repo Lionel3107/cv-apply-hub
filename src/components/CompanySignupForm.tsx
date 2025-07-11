@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Building, Upload, X } from "lucide-react";
+import { Building, Upload, X, Eye, EyeOff } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
@@ -21,13 +21,19 @@ const formSchema = z.object({
   phone: z.string().optional(),
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+    .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+    .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one special character" }),
 });
 
 export default function CompanySignupForm({ onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -332,7 +338,25 @@ export default function CompanySignupForm({ onSuccess }) {
               <FormItem>
                 <FormLabel>Password *</FormLabel>
                 <FormControl>
-                  <Input {...field} type="password" />
+                  <div className="relative">
+                    <Input 
+                      {...field} 
+                      type={showPassword ? "text" : "password"} 
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
