@@ -89,14 +89,14 @@ const CompanyProfile = () => {
       const filePath = `company-logos/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('company-logos')
+        .from('avatars')
         .upload(filePath, logoFile);
         
       if (uploadError) throw uploadError;
       
       // Get public URL
       const { data: publicURL } = supabase.storage
-        .from('company-logos')
+        .from('avatars')
         .getPublicUrl(filePath);
         
       return publicURL.publicUrl;

@@ -104,14 +104,14 @@ export default function CompanySignupForm({ onSuccess }) {
         const filePath = `company-logos/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('logos')
+          .from('avatars')
           .upload(filePath, logoFile);
           
         if (uploadError) throw uploadError;
         
         // Get public URL
         const { data: publicURL } = supabase.storage
-          .from('logos')
+          .from('avatars')
           .getPublicUrl(filePath);
           
         logoUrl = publicURL.publicUrl;
