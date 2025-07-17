@@ -103,9 +103,11 @@ export const useBestApplicants = () => {
         }
 
         setApplicantsByJob(jobsWithApplicants);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching best applicants:", err);
-        setError(err.message);
+        const errorMessage =
+          err instanceof Error ? err.message : "An unknown error occurred";
+        setError(errorMessage);
         toast.error("Failed to load best applicants");
       } finally {
         setIsLoading(false);
