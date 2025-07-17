@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -100,7 +101,7 @@ const CompanyProfile = () => {
         .getPublicUrl(filePath);
         
       return publicURL.publicUrl;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading logo:", error);
       toast.error("Failed to upload logo");
       return null;
@@ -142,9 +143,13 @@ const CompanyProfile = () => {
       toast.success("Company profile updated successfully");
       setIsEditing(false);
       setLogoFile(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating company profile:", error);
-      toast.error(error.message || "Failed to update company profile");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to update company profile";
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

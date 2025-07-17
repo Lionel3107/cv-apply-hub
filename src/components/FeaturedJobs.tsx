@@ -81,9 +81,13 @@ const FeaturedJobs = () => {
         }));
         
         setFeaturedJobs(transformedJobs);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching featured jobs:", err);
-        setError(err.message);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
       } finally {
         setIsLoading(false);
       }
