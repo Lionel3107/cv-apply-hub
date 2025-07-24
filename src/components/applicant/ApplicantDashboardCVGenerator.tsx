@@ -7,14 +7,122 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { FileUp, Download, Zap } from "lucide-react";
+import { FileUp, Download, Zap, Plus, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ExperienceEntry {
+  jobTitle: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  responsibilities: string;
+}
+
+interface EducationEntry {
+  degree: string;
+  institution: string;
+  year: string;
+}
 
 export const ApplicantDashboardCVGenerator = () => {
   const [activeTab, setActiveTab] = useState("create");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedCV, setGeneratedCV] = useState<string>("");
   
-  const handleGenerateCV = (e) => {
-    e.preventDefault();
-    toast.success("CV generation feature will be implemented soon!");
+  // Form state
+  const [personalInfo, setPersonalInfo] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+  });
+  const [summary, setSummary] = useState("");
+  const [experience, setExperience] = useState<ExperienceEntry[]>([
+    { jobTitle: "", company: "", startDate: "", endDate: "", responsibilities: "" }
+  ]);
+  const [education, setEducation] = useState<EducationEntry[]>([
+    { degree: "", institution: "", year: "" }
+  ]);
+  const [skills, setSkills] = useState<string[]>([""]);
+  const [jobDescription, setJobDescription] = useState("");
+
+  const addExperience = () => {
+    setExperience([...experience, { jobTitle: "", company: "", startDate: "", endDate: "", responsibilities: "" }]);
+  };
+
+  const addEducation = () => {
+    setEducation([...education, { degree: "", institution: "", year: "" }]);
+  };
+
+  const addSkill = () => {
+    setSkills([...skills, ""]);
+  };
+
+  const updateExperience = (index: number, field: keyof ExperienceEntry, value: string) => {
+    const updated = [...experience];
+    updated[index][field] = value;
+    setExperience(updated);
+  };
+
+  const updateEducation = (index: number, field: keyof EducationEntry, value: string) => {
+    const updated = [...education];
+    updated[index][field] = value;
+    setEducation(updated);
+  };
+
+  const updateSkill = (index: number, value: string) => {
+    const updated = [...skills];
+    updated[index] = value;
+    setSkills(updated);
+  };
+
+  const handleCVAction = async (action: 'generate' | 'enhance' | 'tailor') => {
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-cv', {
+        body: {
+          personalInfo,
+          summary,
+          experience: experience.filter(exp => exp.jobTitle || exp.company),
+          education: education.filter(edu => edu.degree || edu.institution),
+          skills: skills.filter(skill => skill.trim()),
+          jobDescription: action === 'tailor' ? jobDescription : undefined,
+          action
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setGeneratedCV(data.cvHtml);
+        toast.success(`CV ${action}d successfully!`);
+      } else {
+        throw new Error(data.error || 'Failed to generate CV');
+      }
+    } catch (error) {
+      console.error('Error generating CV:', error);
+      toast.error(`Failed to ${action} CV: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadCV = () => {
+    if (!generatedCV) {
+      toast.error("No CV to download. Please generate one first.");
+      return;
+    }
+
+    const blob = new Blob([generatedCV], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${personalInfo.fullName || 'CV'}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("CV downloaded successfully!");
   };
 
   return (
@@ -34,27 +142,48 @@ export const ApplicantDashboardCVGenerator = () => {
                   <CardTitle>Create Your CV</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleGenerateCV} className="space-y-6">
+                  <div className="space-y-6">
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium">Personal Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="fullName">Full Name</Label>
-                          <Input id="fullName" placeholder="Kabore Lionel" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="fullName">Full Name</Label>
+                            <Input 
+                              id="fullName" 
+                              placeholder="Kabore Lionel" 
+                              value={personalInfo.fullName}
+                              onChange={(e) => setPersonalInfo({...personalInfo, fullName: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="email">Email</Label>
+                            <Input 
+                              id="email" 
+                              type="email" 
+                              placeholder="dimkoff@example.com" 
+                              value={personalInfo.email}
+                              onChange={(e) => setPersonalInfo({...personalInfo, email: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="phone">Phone</Label>
+                            <Input 
+                              id="phone" 
+                              placeholder="+226 75 15 66 87" 
+                              value={personalInfo.phone}
+                              onChange={(e) => setPersonalInfo({...personalInfo, phone: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="location">Location</Label>
+                            <Input 
+                              id="location" 
+                              placeholder="Ouagadougou, Burkina Faso" 
+                              value={personalInfo.location}
+                              onChange={(e) => setPersonalInfo({...personalInfo, location: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="dimkoff@example.com" />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone">Phone</Label>
-                          <Input id="phone" placeholder="+226 75 15 66 87" />
-                        </div>
-                        <div>
-                          <Label htmlFor="location">Location</Label>
-                          <Input id="location" placeholder="Ouagadougou, Burkina Faso" />
-                        </div>
-                      </div>
                     </div>
                     
                     <div className="space-y-4">
@@ -62,68 +191,167 @@ export const ApplicantDashboardCVGenerator = () => {
                       <Textarea 
                         placeholder="Write a brief summary of your professional background and goals..."
                         rows={4}
+                        value={summary}
+                        onChange={(e) => setSummary(e.target.value)}
                       />
                     </div>
                     
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Work Experience</h3>
-                        <Button type="button" variant="outline" size="sm">+ Add Experience</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={addExperience}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Experience
+                        </Button>
                       </div>
-                      {/* Experience fields would be dynamically added here */}
-                      <div className="border rounded-md p-4 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="jobTitle">Job Title</Label>
-                            <Input id="jobTitle" placeholder="Software Engineer" />
+                      {experience.map((exp, index) => (
+                        <div key={index} className="border rounded-md p-4 space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`jobTitle-${index}`}>Job Title</Label>
+                              <Input 
+                                id={`jobTitle-${index}`} 
+                                placeholder="Software Engineer" 
+                                value={exp.jobTitle}
+                                onChange={(e) => updateExperience(index, 'jobTitle', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`company-${index}`}>Company</Label>
+                              <Input 
+                                id={`company-${index}`} 
+                                placeholder="Tech Company Inc." 
+                                value={exp.company}
+                                onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`startDate-${index}`}>Start Date</Label>
+                              <Input 
+                                id={`startDate-${index}`} 
+                                type="date" 
+                                value={exp.startDate}
+                                onChange={(e) => updateExperience(index, 'startDate', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`endDate-${index}`}>End Date</Label>
+                              <Input 
+                                id={`endDate-${index}`} 
+                                type="date" 
+                                value={exp.endDate}
+                                onChange={(e) => updateExperience(index, 'endDate', e.target.value)}
+                              />
+                            </div>
                           </div>
                           <div>
-                            <Label htmlFor="company">Company</Label>
-                            <Input id="company" placeholder="Tech Company Inc." />
+                            <Label htmlFor={`responsibilities-${index}`}>Responsibilities & Achievements</Label>
+                            <Textarea 
+                              id={`responsibilities-${index}`}
+                              placeholder="Describe your responsibilities and achievements..."
+                              rows={3}
+                              value={exp.responsibilities}
+                              onChange={(e) => updateExperience(index, 'responsibilities', e.target.value)}
+                            />
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="startDate">Start Date</Label>
-                            <Input id="startDate" type="date" />
-                          </div>
-                          <div>
-                            <Label htmlFor="endDate">End Date</Label>
-                            <Input id="endDate" type="date" />
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="responsibilities">Responsibilities & Achievements</Label>
-                          <Textarea 
-                            id="responsibilities"
-                            placeholder="Describe your responsibilities and achievements..."
-                            rows={3}
-                          />
-                        </div>
-                      </div>
+                      ))}
                     </div>
                     
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Education</h3>
-                        <Button type="button" variant="outline" size="sm">+ Add Education</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={addEducation}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Education
+                        </Button>
                       </div>
-                      {/* Education fields would be dynamically added here */}
+                      {education.map((edu, index) => (
+                        <div key={index} className="border rounded-md p-4 space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor={`degree-${index}`}>Degree</Label>
+                              <Input 
+                                id={`degree-${index}`} 
+                                placeholder="Bachelor of Computer Science" 
+                                value={edu.degree}
+                                onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`institution-${index}`}>Institution</Label>
+                              <Input 
+                                id={`institution-${index}`} 
+                                placeholder="University Name" 
+                                value={edu.institution}
+                                onChange={(e) => updateEducation(index, 'institution', e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor={`year-${index}`}>Year</Label>
+                            <Input 
+                              id={`year-${index}`} 
+                              placeholder="2020" 
+                              value={edu.year}
+                              onChange={(e) => updateEducation(index, 'year', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                     
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Skills</h3>
-                        <Button type="button" variant="outline" size="sm">+ Add Skill</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={addSkill}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Skill
+                        </Button>
                       </div>
-                      {/* Skills fields would be dynamically added here */}
+                      {skills.map((skill, index) => (
+                        <div key={index}>
+                          <Input 
+                            placeholder="e.g. JavaScript, Project Management, etc." 
+                            value={skill}
+                            onChange={(e) => updateSkill(index, e.target.value)}
+                          />
+                        </div>
+                      ))}
                     </div>
                     
-                    <Button type="submit" className="w-full">
-                      <Download className="mr-2 h-4 w-4" />
-                      Generate CV
-                    </Button>
-                  </form>
+                    <div className="flex gap-3">
+                      <Button 
+                        type="button" 
+                        onClick={() => handleCVAction('generate')} 
+                        disabled={isGenerating}
+                        className="flex-1"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Zap className="mr-2 h-4 w-4" />
+                        )}
+                        Generate CV
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => handleCVAction('enhance')} 
+                        disabled={isGenerating}
+                        className="flex-1"
+                      >
+                        {isGenerating ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Zap className="mr-2 h-4 w-4" />
+                        )}
+                        Enhance CV
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -134,10 +362,23 @@ export const ApplicantDashboardCVGenerator = () => {
                   <CardTitle>CV Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-center text-gray-500 border-2 border-dashed rounded-lg p-4">
-                    <p>Your CV preview will appear here</p>
-                    <p className="text-sm mt-2">Complete the form to generate a preview</p>
-                  </div>
+                  {generatedCV ? (
+                    <div className="space-y-4">
+                      <div 
+                        className="border rounded-lg p-4 bg-white text-black min-h-[500px] max-h-[600px] overflow-auto"
+                        dangerouslySetInnerHTML={{ __html: generatedCV }}
+                      />
+                      <Button onClick={downloadCV} className="w-full">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download CV
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full min-h-[500px] text-center text-gray-500 border-2 border-dashed rounded-lg p-4">
+                      <p>Your CV preview will appear here</p>
+                      <p className="text-sm mt-2">Complete the form and click "Generate CV" to see a preview</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -201,15 +442,24 @@ export const ApplicantDashboardCVGenerator = () => {
                     id="jobDescription"
                     placeholder="Paste a job description here to tailor your CV..."
                     rows={4}
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
                   />
                   <div className="flex justify-between">
                     <Button variant="outline">
                       <FileUp className="mr-2 h-4 w-4" />
                       Upload Existing CV
                     </Button>
-                    <Button>
-                      <Zap className="mr-2 h-4 w-4" />
-                      Enhance with AI
+                    <Button 
+                      onClick={() => handleCVAction('tailor')} 
+                      disabled={isGenerating || !jobDescription.trim()}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Zap className="mr-2 h-4 w-4" />
+                      )}
+                      Tailor CV to Job
                     </Button>
                   </div>
                 </div>
