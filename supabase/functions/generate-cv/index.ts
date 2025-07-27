@@ -40,8 +40,9 @@ serve(async (req) => {
 
   try {
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       return new Response(JSON.stringify({ 
-        error: 'OpenAI API key not configured' 
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,7 +115,9 @@ Customize the CV to highlight relevant skills and experience that match the job 
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
     }
 
     const result = await response.json();

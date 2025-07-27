@@ -22,6 +22,13 @@ export interface Applicant {
 export interface ApplicantWithScore extends Applicant {
   score: number;
   avatar?: string;
+  strengths?: string[];
+  improvements?: string[];
+  recommendation?: string;
+  feedback?: string;
+  updatedAt?: string;
+  aiConsent?: boolean;
+  consentDate?: string;
 }
 
 export interface ApplicantApplication {
