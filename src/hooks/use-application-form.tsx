@@ -29,6 +29,7 @@ export const useApplicationForm = (jobId?: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [coverLetterError, setCoverLetterError] = useState<string | null>(null);
+  const [aiConsent, setAiConsent] = useState(false);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -40,6 +41,16 @@ export const useApplicationForm = (jobId?: string) => {
     
     // Validate form
     if (!validateJobApplicationForm(formData.fullName, formData.email, resumeFile)) {
+      return;
+    }
+    
+    // Check AI consent
+    if (!aiConsent) {
+      toast({
+        title: "Consent Required",
+        description: "Please provide consent for AI processing of your application materials.",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -126,7 +137,9 @@ export const useApplicationForm = (jobId?: string) => {
           cover_letter: coverLetterUrl,
           status: 'new',
           applied_date: new Date().toISOString(),
-          skills: null
+          skills: null,
+          ai_consent: true, // Store the consent
+          consent_date: new Date().toISOString() // Store when consent was given
         });
         
       if (applicationError) {
@@ -163,6 +176,8 @@ export const useApplicationForm = (jobId?: string) => {
     isSubmitting,
     fileError,
     coverLetterError,
+    aiConsent,
+    setAiConsent,
     setResumeFile,
     setFileError,
     setCoverLetterFile,
