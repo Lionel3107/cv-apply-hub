@@ -22,6 +22,7 @@ type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,6 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        // If profile doesn't exist yet, retry after a short delay
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, retrying in 2 seconds...');
+          setTimeout(() => {
+            fetchProfile(userId);
+          }, 2000);
+        }
         return;
       }
 
@@ -107,6 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -115,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         isLoading,
         signOut,
+        refreshProfile,
       }}
     >
       {children}
