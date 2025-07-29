@@ -6,6 +6,7 @@ import { CompanyDashboardJobs } from "@/components/CompanyDashboardJobs";
 import { CompanyDashboardInsights } from "@/components/CompanyDashboardInsights";
 import { CompanyDashboardSchedule } from "@/components/CompanyDashboardSchedule";
 import { CompanyDashboardBestApplicants } from "@/components/CompanyDashboardBestApplicants";
+import { CompanyProfileEditor } from "@/components/CompanyProfileEditor";
 import { JobApplicantsView } from "@/components/JobApplicantsView";
 import { Job } from "@/types/job";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -61,6 +62,7 @@ const Dashboard = () => {
                 <TabsTrigger value="best-applicants">Best Applicants</TabsTrigger>
                 <TabsTrigger value="schedule">Schedule</TabsTrigger>
                 <TabsTrigger value="insights">Insights</TabsTrigger>
+                <TabsTrigger value="profile">Company Profile</TabsTrigger>
               </TabsList>
               <TabsContent value="jobs" className="animate-fade-in">
                 {selectedJob ? (
@@ -77,6 +79,9 @@ const Dashboard = () => {
               </TabsContent>
               <TabsContent value="insights" className="animate-fade-in">
                 <CompanyDashboardInsights />
+              </TabsContent>
+              <TabsContent value="profile" className="animate-fade-in">
+                <CompanyProfileEditor />
               </TabsContent>
             </Tabs>
           </TooltipProvider>
