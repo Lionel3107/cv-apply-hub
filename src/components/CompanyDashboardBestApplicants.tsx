@@ -49,54 +49,42 @@ export const CompanyDashboardBestApplicants = () => {
   const handleAnalyzeJobApplicants = async (jobId: string) => {
     const job = applicantsByJob.find(j => j.jobId === jobId);
     if (!job) {
-      toast.error("Poste non trouvé");
+      toast.error("Job not found");
       return;
     }
 
     if (job.applicants.length === 0) {
-      toast.error("Aucun candidat à analyser pour ce poste");
+      toast.error("No candidates to analyze for this job");
       return;
     }
 
-    // Créer une description de poste basique si elle n'existe pas
-    const jobDescription = `Poste: ${job.jobTitle}. Analysez les candidats pour ce poste.`;
+    // Use the real job description
+    const jobDescription = job.jobDescription || `Job: ${job.jobTitle}. Analyze candidates for this position.`;
 
     try {
-      console.log(`Début de l'analyse pour ${job.applicants.length} candidats`);
+      console.log(`Starting analysis for ${job.applicants.length} candidates`);
       
-      // Analyser chaque candidat individuellement et rafraîchir après chaque analyse
-      for (const applicant of job.applicants) {
-        console.log(`Analyse du candidat: ${applicant.name}`);
-        
-        const data = {
-          applicationId: applicant.id,
-          jobDescription,
-          candidateData: {
-            name: applicant.name,
-            email: applicant.email,
-            experience: applicant.experience || '',
-            education: applicant.education || '',
-            skills: applicant.skills || []
-          }
-        };
+              // Analyze each candidate individually and refresh after each analysis
+        for (const applicant of job.applicants) {
+          console.log(`Analyzing candidate: ${applicant.name}`);
         
         const result = await analyzeBulkCVs([applicant], jobDescription);
-        console.log(`Résultat analyse pour ${applicant.name}:`, result);
-        
-        // Rafraîchir immédiatement après chaque analyse
+                  console.log(`Analysis result for ${applicant.name}:`, result);
+          
+          // Refresh immediately after each analysis
         await new Promise(resolve => setTimeout(resolve, 500));
         refreshData();
       }
       
-      toast.success(`Analyse terminée pour ${job.applicants.length} candidat(s)`);
+      toast.success(`Analysis completed for ${job.applicants.length} candidate(s)`);
       
-      // Rafraîchir une dernière fois après toutes les analyses
+      // Refresh one last time after all analyses
       setTimeout(() => {
         refreshData();
       }, 2000);
     } catch (error) {
-      console.error("Erreur lors de l'analyse:", error);
-      toast.error("Erreur lors de l'analyse des CV");
+      console.error("Error during analysis:", error);
+      toast.error("Error during CV analysis");
     }
   };
   
@@ -163,11 +151,14 @@ export const CompanyDashboardBestApplicants = () => {
   
   return (
     <div className="space-y-6">
+      {/* Résumé des statistiques */}
+      <BestApplicantsSummary applicantsByJob={applicantsByJob} />
+      
       <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
         <div>
-          <h2 className="text-xl font-bold">Meilleurs Candidats par Poste</h2>
+          <h2 className="text-xl font-bold">Best Candidates by Job</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Classement basé sur l'analyse IA et les compétences
+            Ranking based on AI analysis and skills
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -176,13 +167,10 @@ export const CompanyDashboardBestApplicants = () => {
             onSortChange={handleSort} 
             onLimitChange={handleLimit} 
           />
-          {applicantsByJob.length > 0 && (
+          {applicantsByJob.length > 0 && expandedJob && (
             <Button
               onClick={() => {
-                const firstJob = applicantsByJob[0];
-                if (firstJob) {
-                  handleAnalyzeJobApplicants(firstJob.jobId);
-                }
+                handleAnalyzeJobApplicants(expandedJob);
               }}
               disabled={isAnalyzing}
               variant="outline"
@@ -191,12 +179,12 @@ export const CompanyDashboardBestApplicants = () => {
               {isAnalyzing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyse en cours...
+                  Analyzing...
                 </>
               ) : (
                 <>
                   <Brain className="mr-2 h-4 w-4" />
-                  Analyser tous les CV
+                  Analyze CVs for selected job
                 </>
               )}
             </Button>

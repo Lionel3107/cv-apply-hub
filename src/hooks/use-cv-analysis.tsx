@@ -5,24 +5,19 @@ import { toast } from 'sonner';
 interface CVAnalysisData {
   applicationId: string;
   jobDescription: string;
-  candidateData: {
-    name: string;
-    email: string;
-    experience: string;
-    education: string;
-    skills: string[];
-  };
 }
 
 interface CVAnalysisResult {
   success: boolean;
   analysis?: {
-    applicationId: string;
     score: number;
     strengths: string[];
     improvements: string[];
     recommendation: string;
     feedback: string;
+    skills?: string[];
+    experience?: string;
+    education?: string;
   };
   error?: string;
 }
@@ -35,10 +30,14 @@ export const useCVAnalysis = () => {
     
     try {
       console.log('Starting CV analysis for:', data.applicationId);
+      console.log('Analysis data:', JSON.stringify(data, null, 2));
       
       const { data: result, error } = await supabase.functions.invoke('analyze-cv', {
         body: data
       });
+      
+      console.log('Analysis result:', result);
+      console.log('Analysis error:', error);
 
       if (error) {
         console.error('CV analysis error:', error);
@@ -67,27 +66,36 @@ export const useCVAnalysis = () => {
     const results = [];
     
     try {
-      for (const app of applications) {
+      console.log(`Starting bulk analysis for ${applications.length} applications`);
+      
+      for (let i = 0; i < applications.length; i++) {
+        const app = applications[i];
+        console.log(`Analyzing application ${i + 1}/${applications.length}: ${app.name}`);
+        
         const data: CVAnalysisData = {
           applicationId: app.id,
-          jobDescription,
-          candidateData: {
-            name: app.name,
-            email: app.email,
-            experience: app.experience || '',
-            education: app.education || '',
-            skills: app.skills || []
-          }
+          jobDescription
         };
         
         const result = await analyzeCV(data);
         results.push(result);
         
+        // Show progress
+        if (i % 3 === 0) {
+          toast.info(`Analyzed ${i + 1}/${applications.length} CVs...`);
+        }
+        
         // Small delay between requests to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
-      toast.success(`Analyzed ${results.filter(r => r.success).length} CVs successfully`);
+      const successCount = results.filter(r => r.success).length;
+      toast.success(`Analyzed ${successCount}/${applications.length} CVs successfully`);
+      
+      if (successCount < applications.length) {
+        toast.error(`${applications.length - successCount} CVs failed to analyze`);
+      }
+      
       return results;
     } catch (error) {
       console.error('Error during bulk CV analysis:', error);

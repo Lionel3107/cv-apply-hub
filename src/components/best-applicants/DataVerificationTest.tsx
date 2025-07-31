@@ -120,7 +120,7 @@ export const DataVerificationTest: React.FC<DataVerificationTestProps> = ({
             <strong>Application ID:</strong> {applicationId}
           </div>
           <div>
-            <strong>Candidat:</strong> {candidateName}
+                            <strong>Candidate:</strong> {candidateName}
           </div>
           
           {verificationResult && (

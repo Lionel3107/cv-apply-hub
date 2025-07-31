@@ -1,4 +1,3 @@
-
 import { Building, User } from "lucide-react";
 
 type UserType = "applicant" | "company";

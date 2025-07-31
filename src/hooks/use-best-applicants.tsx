@@ -8,6 +8,7 @@ import { toast } from "sonner";
 interface ApplicantsByJob {
   jobId: string;
   jobTitle: string;
+  jobDescription: string;
   applicants: ApplicantWithScore[];
 }
 
@@ -22,9 +23,19 @@ export const useBestApplicants = () => {
       setIsLoading(true);
       setError(null);
 
+      console.log("Profile data:", profile);
+
       // Check if user is authenticated and has the right role
-      if (!profile || !profile.company_id) {
+      if (!profile) {
+        throw new Error("You must be logged in to view best applicants");
+      }
+      
+      if (!profile.is_employer) {
         throw new Error("You must be an employer to view best applicants");
+      }
+      
+      if (!profile.company_id) {
+        throw new Error("Please complete your company profile to view best applicants");
       }
 
       // First, get all jobs for this company
@@ -67,7 +78,7 @@ export const useBestApplicants = () => {
           // Parse feedback to extract strengths and improvements if available
           let strengths: string[] = [];
           let improvements: string[] = [];
-          let recommendation = "Non analysé";
+          let recommendation = "Not analyzed";
 
           console.log(`Application ${app.id} - Score: ${app.score}, Feedback:`, app.feedback);
 
@@ -111,8 +122,7 @@ export const useBestApplicants = () => {
             recommendation: recommendation,
             feedback: app.feedback || "",
             updatedAt: app.updated_at,
-            aiConsent: false, // Default to false for backward compatibility
-            consentDate: null
+
           };
 
           console.log(`Processed applicant ${app.id}:`, {
@@ -134,6 +144,7 @@ export const useBestApplicants = () => {
         jobsWithApplicants.push({
           jobId: job.id,
           jobTitle: job.title,
+          jobDescription: job.description || `Job: ${job.title}`,
           applicants,
         });
       }

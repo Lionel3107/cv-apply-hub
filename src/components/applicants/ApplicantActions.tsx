@@ -53,14 +53,7 @@ export const ApplicantActions = ({
 
     await analyzeCV({
       applicationId: applicant.id,
-      jobDescription,
-      candidateData: {
-        name: applicant.name,
-        email: applicant.email,
-        experience: applicant.experience || '',
-        education: applicant.education || '',
-        skills: applicant.skills || []
-      }
+      jobDescription
     });
   };
   const handleDownloadResume = () => {

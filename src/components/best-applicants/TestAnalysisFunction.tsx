@@ -30,14 +30,7 @@ export const TestAnalysisFunction: React.FC<TestAnalysisFunctionProps> = ({
       
       const testData = {
         applicationId: applicationId,
-        jobDescription: "Test job description for analysis",
-        candidateData: {
-          name: candidateName,
-          email: candidateEmail,
-          experience: "5 years of experience in web development",
-          education: "Bachelor's degree in Computer Science",
-          skills: ["JavaScript", "React", "Node.js", "TypeScript"]
-        }
+        jobDescription: "Test job description for analysis"
       };
       
       console.log("🧪 Test Analysis - Sending data:", testData);
@@ -127,7 +120,7 @@ export const TestAnalysisFunction: React.FC<TestAnalysisFunctionProps> = ({
             <strong>Application ID:</strong> {applicationId}
           </div>
           <div>
-            <strong>Candidat:</strong> {candidateName} ({candidateEmail})
+                            <strong>Candidate:</strong> {candidateName} ({candidateEmail})
           </div>
           
           {testResult && (

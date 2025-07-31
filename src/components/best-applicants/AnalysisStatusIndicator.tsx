@@ -6,25 +6,13 @@ interface AnalysisStatusIndicatorProps {
   hasAnalysis: boolean;
   score: number;
   lastUpdated?: string;
-  hasAiConsent?: boolean;
 }
 
 export const AnalysisStatusIndicator: React.FC<AnalysisStatusIndicatorProps> = ({
   hasAnalysis,
   score,
-  lastUpdated,
-  hasAiConsent = true // Default to true for backward compatibility
+  lastUpdated
 }) => {
-  if (!hasAiConsent) {
-    return (
-      <div className="flex items-center gap-1">
-        <AlertCircle className="h-3 w-3 text-red-400" />
-        <Badge variant="outline" className="text-xs text-red-500 bg-red-50 border-red-200">
-          No AI Consent
-        </Badge>
-      </div>
-    );
-  }
 
   if (!hasAnalysis) {
     return (

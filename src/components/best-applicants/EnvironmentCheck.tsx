@@ -74,11 +74,12 @@ export const EnvironmentCheck: React.FC = () => {
       
       console.log("🔍 Environment Check - Read test:", { readData, readError });
       
-      // Test 2: Écriture (avec un ID qui n'existe pas pour éviter de modifier des données réelles)
+      // Test 2: Écriture (avec un vrai UUID qui n'existe probablement pas)
+      const testUUID = '00000000-0000-0000-0000-000000000000';
       const { data: writeData, error: writeError } = await supabase
         .from('applications')
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', 'test-permission-check-id-that-does-not-exist')
+        .eq('id', testUUID)
         .select();
       
       console.log("🔍 Environment Check - Write test:", { writeData, writeError });
@@ -105,8 +106,8 @@ export const EnvironmentCheck: React.FC = () => {
       // Check 4: Environment variables (client-side check)
       console.log("🔍 Environment Check - Checking environment variables...");
       const envVars = {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+        supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
       };
       
       results.environmentVariables = {
@@ -119,7 +120,7 @@ export const EnvironmentCheck: React.FC = () => {
       console.error("🔍 Environment Check - General error:", error);
       results.general = {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         details: 'Erreur générale lors des vérifications'
       };
     }

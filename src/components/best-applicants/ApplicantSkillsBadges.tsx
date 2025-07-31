@@ -15,7 +15,7 @@ export const ApplicantSkillsBadges: React.FC<ApplicantSkillsBadgesProps> = ({
   if (!skills || skills.length === 0) {
     return (
       <div className="text-sm text-gray-400 italic">
-        Aucune compétence spécifiée
+        No skills specified
       </div>
     );
   }
@@ -45,7 +45,7 @@ export const ApplicantSkillsBadges: React.FC<ApplicantSkillsBadgesProps> = ({
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <div className="space-y-1">
-                  <div className="font-medium">Autres compétences :</div>
+                  <div className="font-medium">Other skills:</div>
                   <div className="flex flex-wrap gap-1">
                     {remainingSkills.map((skill, idx) => (
                       <Badge key={idx} variant="outline" className="text-xs">
@@ -62,7 +62,7 @@ export const ApplicantSkillsBadges: React.FC<ApplicantSkillsBadgesProps> = ({
         {/* Indicateur de niveau */}
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
-            {skills.length} compétence{skills.length > 1 ? 's' : ''} identifiée{skills.length > 1 ? 's' : ''}
+            {skills.length} skill{skills.length > 1 ? 's' : ''} identified
           </span>
           {skills.length >= 5 && (
             <span className="text-green-600 font-medium">

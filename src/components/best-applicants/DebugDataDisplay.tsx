@@ -103,7 +103,7 @@ export const DebugDataDisplay: React.FC<DebugDataDisplayProps> = ({ jobId }) => 
                   <strong>ID:</strong> {app.id}
                 </div>
                 <div>
-                  <strong>Score:</strong> {app.score || 'Non défini'}
+                  <strong>Score:</strong> {app.score || 'Not defined'}
                 </div>
                 <div>
                   <strong>Feedback:</strong>
@@ -112,14 +112,14 @@ export const DebugDataDisplay: React.FC<DebugDataDisplayProps> = ({ jobId }) => 
                   </pre>
                 </div>
                 <div>
-                  <strong>Updated At:</strong> {app.updated_at || 'Non défini'}
+                  <strong>Updated At:</strong> {app.updated_at || 'Not defined'}
                 </div>
               </div>
             </div>
           ))}
           {rawData.length === 0 && !isLoading && (
             <div className="text-center text-gray-500 py-4">
-              Aucune donnée trouvée
+              No data found
             </div>
           )}
         </div>

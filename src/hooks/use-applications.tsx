@@ -82,6 +82,7 @@ export const useApplications = (jobId?: string) => {
           name: app.name,
           email: app.email,
           userId: app.user_id, // Include userId for messaging
+          jobId: app.job_id, // Include jobId for proper counting
           jobTitle: app.jobs?.title || "Unknown Position",
           appliedDate: app.applied_date,
           resumeUrl: app.resume_url || "",
