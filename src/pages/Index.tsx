@@ -7,7 +7,7 @@ import HowItWorksSection from "@/components/TrustedCompaniesSection";
 import UploadCVSection from "@/components/UploadCVSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FaqSection from "@/components/FaqSection";
-import StatsSection from "@/components/StatsSection";
+
 import CtaSection from "@/components/CtaSection";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Building, User } from "lucide-react";
@@ -22,7 +22,6 @@ const Index = () => {
       <Header />
       <main className="flex-grow">
         <HeroSection />
-        <StatsSection />
         <FeaturesSection />
         <HowItWorksSection />
         

@@ -141,7 +141,7 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
     }
     
     setFilteredJobs(filtered);
-  }, [jobs, filters]);
+  }, [jobs, filters, applications]);
 
   const handleEditClick = (job) => {
     setJobToEdit(job);
@@ -227,7 +227,8 @@ export const CompanyDashboardJobs = ({ onSelectJob }) => {
   };
 
   const getApplicantCount = (jobId) => {
-    return applications.filter(app => app.jobTitle === jobs.find(j => j.id === jobId)?.title).length;
+    // Count applications that have the specific job_id
+    return applications.filter(app => app.jobId === jobId).length;
   };
 
   const handleExportJobs = () => {

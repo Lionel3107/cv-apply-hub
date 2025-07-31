@@ -15,7 +15,7 @@ export const ApplicantImprovementsDisplay: React.FC<ApplicantImprovementsDisplay
   if (!improvements || improvements.length === 0) {
     return (
       <div className="text-sm text-gray-400 italic">
-        Aucune amélioration suggérée
+        No improvements suggested
       </div>
     );
   }
@@ -47,7 +47,7 @@ export const ApplicantImprovementsDisplay: React.FC<ApplicantImprovementsDisplay
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <div className="space-y-1">
-                  <div className="font-medium">Autres améliorations suggérées :</div>
+                  <div className="font-medium">Other suggested improvements:</div>
                   <div className="space-y-1">
                     {remainingImprovements.map((improvement, idx) => (
                       <div key={idx} className="text-xs text-gray-600">

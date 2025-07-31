@@ -18,19 +18,19 @@ export const BestApplicantsFilters: React.FC<BestApplicantsFiltersProps> = ({
     <div className="flex flex-col sm:flex-row gap-3">
       <Select value={sortBy} onValueChange={onSortChange}>
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Trier par" />
+                      <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="scoreDesc">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              Score IA (décroissant)
+              AI Score (descending)
             </div>
           </SelectItem>
           <SelectItem value="scoreAsc">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              Score IA (croissant)
+              AI Score (ascending)
             </div>
           </SelectItem>
           <SelectItem value="experienceDesc">
@@ -48,7 +48,7 @@ export const BestApplicantsFilters: React.FC<BestApplicantsFiltersProps> = ({
           <SelectItem value="skillsDesc">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Plus de compétences
+              More skills
             </div>
           </SelectItem>
           <SelectItem value="nameAsc">
@@ -80,7 +80,7 @@ export const BestApplicantsFilters: React.FC<BestApplicantsFiltersProps> = ({
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tous les candidats</SelectItem>
+                          <SelectItem value="all">All candidates</SelectItem>
           <SelectItem value="3">Top 3</SelectItem>
           <SelectItem value="5">Top 5</SelectItem>
           <SelectItem value="10">Top 10</SelectItem>

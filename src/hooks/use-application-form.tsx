@@ -11,6 +11,7 @@ interface ApplicationFormData {
   fullName: string;
   email: string;
   phone: string;
+  coverLetter: string;
 }
 
 export const useApplicationForm = (jobId?: string) => {
@@ -21,15 +22,14 @@ export const useApplicationForm = (jobId?: string) => {
   const [formData, setFormData] = useState<ApplicationFormData>({
     fullName: "",
     email: "",
-    phone: ""
+    phone: "",
+    coverLetter: ""
   });
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [coverLetterError, setCoverLetterError] = useState<string | null>(null);
-  const [aiConsent, setAiConsent] = useState(false);
+
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -44,15 +44,7 @@ export const useApplicationForm = (jobId?: string) => {
       return;
     }
     
-    // Check AI consent
-    if (!aiConsent) {
-      toast({
-        title: "Consent Required",
-        description: "Please provide consent for AI processing of your application materials.",
-        variant: "destructive"
-      });
-      return;
-    }
+
     
     if (!user) {
       toast({
@@ -100,29 +92,7 @@ export const useApplicationForm = (jobId?: string) => {
         resumeUrl = publicUrl;
       }
       
-      let coverLetterUrl = null;
-      
-      // Upload cover letter file if provided
-      if (coverLetterFile) {
-        const fileExt = coverLetterFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}-cover.${fileExt}`;
-        const filePath = `cover-letters/${fileName}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('applications')
-          .upload(filePath, coverLetterFile);
-          
-        if (uploadError) {
-          throw new Error(`Cover letter upload failed: ${uploadError.message}`);
-        }
-        
-        // Get the public URL for the uploaded file
-        const { data: { publicUrl } } = supabase.storage
-          .from('applications')
-          .getPublicUrl(filePath);
-          
-        coverLetterUrl = publicUrl;
-      }
+      // Cover letter is now stored as text, not as a file
       
       // Submit application to Supabase
       const { error: applicationError } = await supabase
@@ -134,12 +104,10 @@ export const useApplicationForm = (jobId?: string) => {
           email: formData.email,
           phone: formData.phone || null,
           resume_url: resumeUrl,
-          cover_letter: coverLetterUrl,
+          cover_letter: formData.coverLetter || null,
           status: 'new',
           applied_date: new Date().toISOString(),
-          skills: null,
-          ai_consent: true, // Store the consent
-          consent_date: new Date().toISOString() // Store when consent was given
+
         });
         
       if (applicationError) {
@@ -172,16 +140,10 @@ export const useApplicationForm = (jobId?: string) => {
   return {
     formData,
     resumeFile,
-    coverLetterFile,
     isSubmitting,
     fileError,
-    coverLetterError,
-    aiConsent,
-    setAiConsent,
     setResumeFile,
     setFileError,
-    setCoverLetterFile,
-    setCoverLetterError,
     handleInputChange,
     handleSubmit
   };

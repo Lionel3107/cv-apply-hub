@@ -6,6 +6,7 @@ export interface Applicant {
   name: string;
   email: string;
   userId?: string;
+  jobId: string;
   jobTitle: string;
   appliedDate: string;
   resumeUrl: string;
@@ -27,8 +28,6 @@ export interface ApplicantWithScore extends Applicant {
   recommendation?: string;
   feedback?: string;
   updatedAt?: string;
-  aiConsent?: boolean;
-  consentDate?: string;
 }
 
 export interface ApplicantApplication {
